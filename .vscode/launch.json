@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "OrderOps: Offline / Solution",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "orderops",
+      "args": ["offline", "--track", "solution"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true
+    },
+    {
+      "name": "OrderOps: Cloud / Starter (Kosten!)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "orderops",
+      "args": ["chat", "--allow-cloud", "--track", "starter", "--enable-local-drafts"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true
+    }
+  ]
+}

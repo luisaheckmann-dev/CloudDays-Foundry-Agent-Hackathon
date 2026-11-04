@@ -1,0 +1,11 @@
+{
+  "fixture": true,
+  "as_of": "2026-11-04T08:00:00+01:00",
+  "warehouse": "DE-DEMO",
+  "items": [
+    {"sku": "CD-100", "name": "USB-C Dock", "available": 12, "unit_price_eur": 89, "blocked": false},
+    {"sku": "CD-200", "name": "Headset", "available": 3, "unit_price_eur": 49, "blocked": false},
+    {"sku": "CD-300", "name": "Monitor", "available": 40, "unit_price_eur": 199, "blocked": false},
+    {"sku": "CD-400", "name": "Quarantine Adapter", "available": 8, "unit_price_eur": 19, "blocked": true}
+  ]
+}
