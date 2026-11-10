@@ -1,89 +1,94 @@
-# Architektur: was wirklich wo läuft
+# Architecture: what actually runs where
 
-[Start](../README.md) · [Sicherheit & Kosten](SECURITY-COSTS.md)
+[Home](../README.md) · [Security & Costs](SECURITY-COSTS.md)
 
 ```text
-Mensch / VS Code / PowerShell
-  │ explizit --allow-cloud + AzureCliCredential
+Human / VS Code / PowerShell
+  │ explicit --allow-cloud + AzureCliCredential (own customer identity)
   ▼
 AIProjectClient (azure-ai-projects 2.10.0, Projects API v1)
   ├─ agents.create_version(PromptAgentDefinition)
-  │    ├─ Deployment (vom Teilnehmer gewählt, kein Modell-Fallback)
-  │    ├─ FileSearchTool → Vector Store → 2 synthetische Policy-Dateien
-  │    └─ FunctionTool-METADATEN (keine Python-Bereitstellung)
+  │    ├─ Deployment (customer-chosen, no model fallback)
+  │    ├─ FileSearchTool → vector store → 2 synthetic policy files
+  │    └─ FunctionTool METADATA (no Python deployment)
   └─ get_openai_client() → Responses API
-       ├─ agent_reference {name, version}; max. 4 Responses / Anfrage
-       ├─ file_search: im Dienst ausgeführt → file_citation
-       └─ function_call → lokaler Allowlist-Dispatcher (max. 6 Aufrufe)
-            ├─ get_inventory → JSON-Snapshot, ausschließlich lesen
-            └─ propose_order → validierter Vorschlag NUR im Speicher
-                 │ pending_human_approval ≠ Speicherung
+       ├─ agent_reference {name, version}; max. 4 Responses / request
+       ├─ file_search: service-executed → file_citation
+       └─ function_call → local allowlist dispatcher (max. 6 calls)
+            ├─ get_inventory → read-only JSON snapshot
+            └─ propose_order → validated proposal ONLY in memory
+                 │ pending_human_approval ≠ saved
                  ▼
-       LOKALES CLI-GATE außerhalb des Modells
-       --enable-local-drafts UND exaktes APPROVE <id> am interaktiven Terminal
+       LOCAL CLI GATE outside the model
+       --enable-local-drafts AND exact APPROVE <id> in an interactive terminal
                  ▼
-       .local/drafts.sqlite3 — SIMULATION, PK-idempotent, keine Bestellung
+       .local/drafts.sqlite3 — SIMULATION, primary-key idempotent, not an order
 ```
 
-## Vertrauensgrenzen
+## Trust boundaries
 
-- **Modelltexte sind keine Berechtigungsentscheidung.** Das Modell kann weder das
-  Gate-Flag noch die Terminaleingabe setzen. `save_approved` ist nicht registriert.
-- Nichtinteraktive/piped Standard-Eingabe wird vom CLI-Freigabegate verweigert;
-  ein aus Modelltext weitergeleitetes `APPROVE` ist keine menschliche Bestätigung.
-- `propose_order` und der Schreibpfad prüfen bekannte SKU, Ganzzahl (kein bool/float),
-  1–20, Bestand und Sperre erneut. Aktuelle Policy ist als Workshop-Domainregel
-  auch im Code erzwungen; Produktionsrichtlinien müssten versioniert zentral verwaltet werden.
-- Policy-Dokumente sind Belege, keine ausführbaren Anweisungen. Eine Promptregel
-  vermindert Injection-Risiken, beweist aber keine vollständige Abwehr. Die
-  tatsächliche Sicherheitsgrenze ist die eingeschränkte Tool-Allowlist plus Code.
-- Inventory ist ein statischer synthetischer Snapshot. Es gibt keine ERP-Verbindung,
-  Reservierung, Subtraktion oder Lieferzusage.
-- Idempotenz-ID = Hash aus Policy-ID, SKU und Menge. Zwei identische Vorschläge
-  ergeben im **gesamten lokalen DB-Lebenszyklus** dieselbe Zeile. Für eine echte
-  Order-API wäre eine autorisierte Geschäfts-/Request-ID und Transaktionslogik nötig.
-- Ein lokaler Dateibesitzer kann Python/DB selbst ändern. Das Gate schützt vor
-  Modell-gesteuertem Schreiben im unveränderten Workshopprogramm, nicht vor einem
-  böswilligen Administrator. Kein Produktionsfreigabesystem oder Mehrnutzer-Backend.
+- **Model text is not an authorization decision.** The model cannot set the
+  gate flag or terminal input. `save_approved` is not registered.
+- The CLI denies noninteractive/piped approval; an `APPROVE` forwarded from
+  model output is not human confirmation.
+- `propose_order` and the write path revalidate a known SKU, integer quantity
+  (not bool/float), 1–20, available stock and blocked status. The current policy
+  is also enforced in domain code; production rules need central version management.
+- Documents are evidence, not executable instructions. Prompt defenses do not
+  prove complete injection resistance; the allowlist and code are the hard boundary.
+- Inventory is a static synthetic snapshot. No ERP, reservation, subtraction or
+  delivery promise exists.
+- Idempotency ID hashes policy ID, **current policy file SHA-256**, SKU and quantity.
+  Identical proposals under identical policy bytes produce the same row throughout
+  the **local DB lifetime**. Revalidation rejects changed policy content before
+  writing. Translation therefore changes IDs; always approve the displayed ID.
+  Existing private drafts are not migrated. A real order API would need an
+  authorized business/request ID and transaction logic.
+- A local file owner can edit Python/SQLite. This gate prevents model-directed
+  writes in the unchanged workshop program, not a malicious administrator.
+  It is not enterprise Entra authorization, immutable audit or a multi-user backend.
+- Human Azure project access, customer control-plane administration and project
+  managed-identity runtime access are separate. All cloud resources belong to
+  the customer; facilitator guidance grants no Azure access. See the
+  [role procedure](SECURITY-COSTS.md#scoped-role-assignment-procedure).
 
-## Ausführbare Dateien und klare Pfade
+## Executable components
 
-| Pfad | Verantwortung |
+| Path | Responsibility |
 |---|---|
-| [CLI](../orderops/__main__.py) | Explizite Cloudzustimmung, Chat, Smoke, getrennte lokale Freigabe |
-| [Cloud](../orderops/cloud.py) | Clients, Upload/Index-Polling, versionierte Registrierung, gezieltes Cleanup |
-| [Runtime](../orderops/runtime.py) | Unterstützter Responses-Toolloop mit `previous_response_id` und `call_id` |
-| [Domain](../orderops/business.py) | Read-only Inventar, validierte Vorschläge, SQLite-Idempotenz |
-| [Dispatcher](../orderops/tools.py) | Tool-Allowlist, strikte Parameter, keine dynamische Ausführung |
-| [Starter](../starter/inventory.py) / [Solution](../solution/inventory.py) | Austauschbarer Inventaradapter; eigener Prompt pro Track |
-| [Dataset](../data/evaluation.jsonl) | 10 synthetische Normal-/Negativfälle |
+| [CLI](../orderops/__main__.py) | Explicit cloud consent, chat, smoke, separate local approval |
+| [Cloud](../orderops/cloud.py) | Clients, upload/index polling, versioned registration, scoped cleanup |
+| [Runtime](../orderops/runtime.py) | Responses loop with `previous_response_id` and `call_id` |
+| [Domain](../orderops/business.py) | Read-only inventory, validated proposals, SQLite idempotency |
+| [Dispatcher](../orderops/tools.py) | Tool allowlist, strict parameters, no dynamic execution |
+| [Starter](../starter/inventory.py) / [Solution](../solution/inventory.py) | Replaceable inventory adapter; separate prompt per track |
+| [Dataset](../data/evaluation.jsonl) | 10 synthetic normal/negative cases |
 
-Die Version wird bei jeder SDK-Anfrage explizit referenziert. Eine neue
-Registrierung setzt die aktive Version im ignorierten `.local/cloud-state.json`.
-Ein Prompt-Edit allein ändert den Dienst **nicht**: erneut `register` ausführen.
-Jede CLI-Chatfrage ist ein unabhängiger Kontext; nur die Toolfortsetzungen innerhalb
-einer Frage sind verknüpft. So wächst kein unbegrenzter Verlauf.
+Each SDK agent request explicitly references a version. Registration changes
+the active version in ignored `.local/cloud-state.json`. A prompt edit alone
+does **not** update the service: run `register` again. Every CLI chat question
+is independent; only tool continuations within that question are linked.
+No unbounded conversation history accumulates.
 
-## File Search und die drei IQ-Begriffe
+## File Search and the three IQ terms
 
-| Baustein | Reale Bedeutung | Hier im Pflichtpfad |
+| Component | Actual meaning | In the core |
 |---|---|---|
-| File Search | Agenttool mit Dateien und Vector Store, zitierfähige Retrieval-Ergebnisse | **Ja** |
-| Foundry IQ | Azure AI Search Knowledge Base, agentic retrieval, Knowledge Sources, z. B. MCP | **Nein**; optional separat |
-| Fabric IQ | Semantischer Geschäftskontext, z. B. Ontologien, semantische Modelle, Data Agents | **Nein**; JSON ist kein Fabric IQ |
-| Work IQ | M365-Arbeitskontext aus Zusammenarbeit, Beziehungen und Arbeitsabläufen | **Nein**; ein Prompt/Fixture ist kein Work IQ |
+| File Search | Agent tool with files/vector store and citable retrieval | **Yes** |
+| Foundry IQ | Azure AI Search knowledge base, agentic retrieval and knowledge sources, e.g. MCP | **No**; separate optional setup |
+| Fabric IQ | Semantic business context, e.g. ontologies, semantic models, data agents | **No**; JSON is not Fabric IQ |
+| Work IQ | M365 work context from collaboration, relationships and workflows | **No**; a prompt/fixture is not Work IQ |
 
-## Warum Microsoft hier interessant ist — ohne Exklusivbehauptung
+## Why Microsoft can fit — without exclusivity claims
 
-Foundry bündelt die Agentdefinition, Modellbereitstellung, Tools und betriebliche
-Diagnose. Entra/RBAC, Azure AI Search und optionale Fabric-/M365-Kontexte können
-innerhalb vorhandener Microsoft-Landschaften den Integrationsaufwand reduzieren.
-Der Wert liegt in **passender Identität, Datenanbindung und Betrieb**, nicht darin,
-dass andere Plattformen keine Agenten, RAG, Governance oder menschliche Freigaben könnten.
-AWS und Databricks bieten ebenfalls Agent-, Retrieval- und Evaluationsbausteine.
-Verglichen werden sollten reale Datenquellen, Berechtigungsweitergabe, Region,
-Betriebsmodell, Kosten und Teamkompetenz. Diese Übung ist kein Featurebenchmark.
+Foundry combines agent definitions, model deployment, tools and diagnostics.
+Entra/RBAC, Azure AI Search and optional Fabric/M365 context can reduce integration
+effort in existing Microsoft environments. The value is **appropriate identity,
+data integration and operations**, not a claim that other platforms lack agents,
+RAG, governance or human approval. AWS and Databricks also offer agent, retrieval
+and evaluation components. Compare actual sources, permission propagation, region,
+operating model, costs and team skills; this exercise is not a feature benchmark.
 
-Hosted Agents sind ein **anderes Deploymentmodell**: ein ausführbarer Dienst/Container
-mit zusätzlicher Infrastruktur. Eine FunctionTool-Definition lädt keine Python-Datei
-in Foundry hoch. Siehe [optionale Erweiterungen](optional/IQ.md).
+Hosted agents use a **different deployment model**: an executable service/container
+with additional infrastructure. FunctionTool registration uploads no Python.
+See [optional extensions](optional/IQ.md).

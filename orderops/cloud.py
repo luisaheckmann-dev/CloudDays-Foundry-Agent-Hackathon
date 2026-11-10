@@ -29,23 +29,23 @@ def preflight():
         deployments = list(project.deployments.list())
         match = next((d for d in deployments if d.name == settings.model), None)
         if match is None:
-            raise ValueError("Deploymentname nicht im Projekt gefunden. Models + endpoints prüfen; kein Fallback.")
+            raise ValueError("Deployment name not found in project. Check Models + endpoints; no fallback.")
         response = api.responses.create(model=settings.model, input="Reply with the single word READY.",
                                         max_output_tokens=512)
         state = read_state(settings, create=True)
         state["response_ids"].append(response.id)
         save_state(state)
         if response.status != "completed" or not response.output_text.strip():
-            raise RuntimeError("Modellprobe nicht vollständig; Modell/Quota/Budget prüfen.")
-        print(f"Cloud-Preflight OK: explizite CLI-Identität, Projekt erreichbar, Deployment {match.name}.")
-        print("Responses-Modellprobe erfolgreich; Function/File-Search-Fähigkeit erst mit smoke geprüft.")
+            raise RuntimeError("Model probe incomplete; check model/quota/budget.")
+        print(f"Cloud preflight OK: explicit CLI identity, project reachable, deployment {match.name}.")
+        print("Responses model probe passed; Function/File Search capability is checked only by smoke.")
 
 
 def upload():
     settings = Settings.read()
     state = read_state(settings, create=True)
     if state["active_vector_store"]:
-        raise ValueError("Bereits ein Store vorhanden. Wiederverwenden oder zuerst cleanup; kein Doppelupload.")
+        raise ValueError("A store already exists. Reuse it or run cleanup first; no duplicate upload.")
     with clients(settings) as (_, _, api):
         store = api.vector_stores.create(name=f"{settings.agent}-policies",
                                          expires_after={"anchor": "last_active_at", "days": 1})
@@ -63,14 +63,14 @@ def upload():
                 if item.status == "completed":
                     break
                 if item.status != "in_progress":
-                    raise RuntimeError(f"Indexierung {path.name}: {item.status}; cleanup und Fehler prüfen.")
+                    raise RuntimeError(f"Indexing {path.name}: {item.status}; check error and cleanup.")
                 if time.monotonic() >= deadline:
-                    raise TimeoutError("Indexierung >180s; nicht bereit. Kein Agent registriert; cleanup möglich.")
+                    raise TimeoutError("Indexing >180s; not ready. No agent registered; cleanup is possible.")
                 time.sleep(2)
-            print(f"Indexiert: {path.name} -> {uploaded.id} [completed]")
+            print(f"Indexed: {path.name} -> {uploaded.id} [completed]")
         state["active_vector_store"] = store.id
         save_state(state)
-        print("File Search bereit (kein Foundry IQ).")
+        print("File Search ready (not Foundry IQ).")
 
 
 def register(track):
@@ -79,7 +79,7 @@ def register(track):
     state = read_state(settings)
     store = state["active_vector_store"]
     if not store:
-        raise ValueError("Keine abgeschlossene Indexierung. upload zuerst ausführen.")
+        raise ValueError("No completed indexing. Run upload first.")
     instructions = (ROOT / track / "instructions.txt").read_text(encoding="utf-8")
     with clients(settings) as (_, project, _):
         definition = PromptAgentDefinition(
@@ -95,8 +95,8 @@ def register(track):
         state["versions"].append(record)
         state["active_agent"] = record
         save_state(state)
-        print(f"Registriert: {agent.name} Version {agent.version} / {track}.")
-        print("Nur Prompt + Tool-Metadaten deployed. Python läuft weiterhin lokal, NICHT in Foundry.")
+        print(f"Registered: {agent.name} version {agent.version} / {track}.")
+        print("Only prompt + tool metadata deployed. Python still runs locally, NOT in Foundry.")
 
 
 @contextmanager
@@ -105,7 +105,7 @@ def session(track):
     state = read_state(settings)
     active = state["active_agent"]
     if not active or active["track"] != track:
-        raise ValueError(f"Kein aktiver {track}-Agent. register --track {track} ausführen.")
+        raise ValueError(f"No active {track} agent. Run register --track {track}.")
     reference = {"type": "agent_reference", "name": active["name"], "version": active["version"]}
     with clients(settings) as (_, project, api):
         project.agents.get_version(agent_name=active["name"], agent_version=active["version"])
@@ -139,7 +139,7 @@ def cleanup(confirm):
     settings = Settings.read()
     state = read_state(settings)
     if confirm != settings.agent:
-        raise ValueError("--confirm muss exakt FOUNDRY_AGENT_NAME entsprechen; erst Manifest ansehen.")
+        raise ValueError("--confirm must exactly match FOUNDRY_AGENT_NAME; inspect the manifest first.")
     failures = []
     with clients(settings) as (_, project, api):
         groups = [
@@ -165,6 +165,6 @@ def cleanup(confirm):
                     state["active_vector_store"] = None
                 save_state(state)
     if failures:
-        raise RuntimeError("Cleanup unvollständig; Manifest behalten und erneut starten: " + ", ".join(failures))
-    print("Nur manifestierte Agentversionen, Responses, Vector Stores und Dateien entfernt.")
-    print("Projekt, Modell, Search, Storage, Rollen und Resource Group wurden NICHT gelöscht.")
+        raise RuntimeError("Cleanup incomplete; keep the manifest and retry: " + ", ".join(failures))
+    print("Only manifested agent versions, Responses, vector stores and files removed.")
+    print("Project, model, Search, Storage, roles and resource group were NOT deleted.")

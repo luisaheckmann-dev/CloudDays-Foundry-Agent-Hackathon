@@ -1,48 +1,53 @@
-# Recovery-Karte: Diagnose vor Neuinstallation
+# Recovery card: diagnose before reinstalling
 
-[Start](../README.md) · [Readiness](labs/00-readiness.md)
+[Home](../README.md) · [Readiness](labs/00-readiness.md)
 
-**Grundregel:** Fehlerexitcode ist ein Fehler, kein automatischer Offline-Pass.
-Nur synthetische, bereinigte Fehlermeldungen teilen. `.env`/Tokens nie posten.
+**Rule:** a failure exit code is a failure, not an automatic offline pass.
+Share only sanitized synthetic error details; never post `.env`, tokens or private
+logs. Facilitators guide; customer admins perform approved privileged repairs.
 
-| Symptom | Präzise Wiederherstellung |
+| Symptom | Precise recovery |
 |---|---|
-| Falscher Arbeitsordner / `No module named orderops` | VS Code im Repositoryordner öffnen; `Get-Location`; `.\.venv\Scripts\python.exe -m orderops --help`. Nicht vom Parentordner aus ausführen. |
-| `python` fehlt oder Store öffnet sich | `py -0p`, installierte 3.11+-Version wählen; `.venv` damit neu erstellen. |
-| PowerShell blockiert `.ps1` | Einzelbefehle in Lab 00 ausführen; keine globale ExecutionPolicy ändern. |
-| `ModuleNotFoundError azure...` | `.venv`-Interpreter wählen; `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`, dann `-m pip check`. |
-| 1.x/2.x-Mix oder alte OpenAI-Signaturen | `-m pip show azure-ai-projects openai azure-identity`; gepinnte Requirements in derselben `.venv` installieren. |
-| Corporate Proxy / TLS | genehmigte Netzwerk-/CA-Konfiguration mit IT; niemals Zertifikatsprüfung deaktivieren. |
-| `.env` Platzhalter / URL abgelehnt | echten Projektendpoint mit `/api/projects/NAME`, Deploymentnamen und eindeutigen Agentnamen setzen. Keine Keys nötig. |
-| Trotz `.env` falsches Projekt | `Get-ChildItem Env:FOUNDRY*` lokal prüfen; alte Variablen bewusst entfernen, neues Terminal öffnen. Shellwerte haben Vorrang. |
-| CredentialUnavailable / 401 | `az login`, `az account show`; bei Bedarf expliziten von Instructor vorgegebenen Tenant verwenden. |
-| CLI verlangt nur einen Selektor | In `.env` entweder `AZURE_TENANT_ID` oder `AZURE_SUBSCRIPTION_ID` setzen, nicht beide. Bei mehreren angemeldeten Konten exakte Subscription-GUID verwenden; globale Standardsubscription muss nicht gewechselt werden. |
-| 403 bei Projekt/Agent | Foundry-User-Scope und Rollenzuweisung prüfen; nach Propagation erneut anmelden. Keine pauschale Owner-Rolle verteilen. |
-| 403 bei Upload | File-Search-Setup und tatsächliches Projektstorage prüfen; ggf. Storage Blob Data Contributor. |
-| Deploymentname nicht gefunden | zugewiesenes Projekt und **Deploymentname**, nicht bloßen Modellnamen, prüfen. Preflight wiederholen. |
-| 404 `agents` / falscher API-Pfad | neues Foundry-Projekt verwenden, nicht Hub-Connection-String/classic. SDK 2.10.0 und Projektendpoint kontrollieren. |
-| 400 wegen Tool-/Modellunterstützung | Modell in Region tatsächlich für Responses + Function Calling + File Search freigegeben? Instructor wählt bewusst unterstütztes Deployment, dann Preflight/register/smoke. |
-| 429 / Quota | Schleife stoppen. Retry-After/Quota mit Instructor prüfen; manuell später erneut oder bewusst anderes genehmigtes Deployment. |
-| Timeout / Netzwerk | Endpoint/DNS/Private-Endpoint-Zugriff prüfen. Kein endloser Retry; fehlgeschlagene Cloudaktionen im Manifest kontrollieren. |
-| Ingestion nicht completed | Fehlerstatus/Storage/Datei prüfen; nicht registrieren. Scoped cleanup, anschließend Upload erneut. |
-| `Bereits ein Store vorhanden` | vorhandenen Store nutzen. Für absichtlichen Neuaufbau erst scoped Cleanup; nicht Manifest löschen und Ressourcen vergessen. |
-| Store nach Veranstaltung nicht mehr nutzbar | eintägige Inaktivitätsablauffrist; gezielt bereinigen, neu hochladen und neue Agentversion registrieren. |
-| Keine Zitatannotation | konkrete Policyfrage, richtigen Store und aktive Version prüfen; File Search explizit verlangen. Plaintext-Dateiname ist kein Ersatz. |
-| `Kein aktiver starter-Agent` | `register --allow-cloud --track starter`. Starter und Solution werden nicht still gemischt. |
-| Prompt geändert, Verhalten bleibt | Datei speichern **und** neue Version registrieren; Ausgabe/Manifestversion kontrollieren. |
-| Starter-Inventar rejected | `NotImplementedError` in `starter\inventory.py` umsetzen; `python -m unittest starter.checks -v`. |
-| Toolbudget erschöpft | unnötige Calls im Prompt vermeiden, klare Frage stellen. Keine Freigabe nach Fehler; Limits nicht blind entfernen. |
-| Response `incomplete` | Ausgabe-/Reasoningbedarf und Modellwahl prüfen. Defaultbudget bewusst klein; erst freigegebenes geeignetes Modell wählen. Ein notwendiger Budgetedit in `runtime.py` erfordert erneute Tests und neue Kostenabschätzung. |
-| Freigabe denied | Flag `--enable-local-drafts` **und** exakte angezeigte `APPROVE <id>`-Zeile nötig. `yes`, Modelltext und Pipes aus Agentantworten gelten nicht als Freigabe. |
-| Schon beim ersten Demoauftritt `duplicate` | identischer Vorschlag wurde in derselben lokalen DB schon gespeichert. Korrektes Idempotenzverhalten; keine echte Bestellung. |
-| SQLite gesperrt | eigene offenen DB-Viewer/Debuggerverbindungen schließen. Programm schließt Connections explizit. Keine beliebigen Systemprozesse beenden. |
-| Windows/OneDrive sperrt `cloud-state.json` | Kurzzeitige Windows-Sperren werden begrenzt erneut versucht. Bei anhaltendem Fehler bleibt er sichtbar; `cloud-state.new` und vorhandenes Manifest sichern, eigene Datei-/Synczugriffe schließen und gezielt fortsetzen. Manifest nicht löschen, sonst fehlt die Cleanup-Zuordnung. Für echte private Daten einen genehmigten nicht synchronisierten Ordner nutzen. |
-| Debugger wartet ohne Eingabe | integriertes Terminal verwenden; Debug Console ist kein `input()`-Terminal. |
-| Keine Portaltraces | Telemetrieziel/Ansicht ggf. nicht vorhanden. Lokale Diagnosen + Response-IDs nutzen; kein automatischer OTel-Export in diesem Repo. |
-| Cleanup Teilfehler | Manifest behalten, spezifischen Zugriff/Fehler korrigieren und denselben scoped Befehl wiederholen. |
-| Manifest gehört zu anderem Projekt | alte `.env` wiederherstellen und alte Ressourcen gezielt bereinigen. Nicht mit fremden IDs weitermachen. |
+| Wrong working folder / `No module named orderops` | Open the repo in VS Code; `Get-Location`; `.\.venv\Scripts\python.exe -m orderops --help`. Do not run from the parent folder. |
+| Missing `python` / Store opens | `py -0p`; choose an installed 3.11+ version and create `.venv` with it. |
+| PowerShell blocks `.ps1` | Use individual Lab 00 commands; no global execution-policy change. |
+| `ModuleNotFoundError azure...` | Select `.venv`; `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`, then `-m pip check`. |
+| Mixed SDK 1.x/2.x / old OpenAI signatures | `-m pip show azure-ai-projects openai azure-identity`; install pinned requirements in the same `.venv`. |
+| Corporate proxy / TLS | Customer IT supplies approved network/CA configuration; never disable certificate checks. |
+| No active subscription, approval or admin | Record `BLOCKED` with customer owner/action; schedule clinic/follow-up. Corporate email is not Azure entitlement; no instructor fallback or new purchase in the lab. |
+| Resource/provider creation denied | Customer bootstrap operator checks subscription actions, registration and policy; project Foundry User is not management authority. |
+| Standard/private network required | Customer architecture/admin team provisions the approved backing resources, identities and routing. Basic/public access is not a policy workaround. |
+| `.env` placeholder / rejected URL | Use own customer project `/api/projects/NAME`, actual deployment name, unused unique agent name. No keys. |
+| Unexpected project despite `.env` | Privately inspect relevant `FOUNDRY*` shell variables; shell values override `.env`. Deliberately correct obsolete settings/open a new terminal; do not publish output. |
+| CredentialUnavailable / 401 | Explicit own `az login --tenant "YOUR-CUSTOMER-TENANT-ID"`; compare intended subscription using `az account show --subscription "YOUR-CUSTOMER-SUBSCRIPTION-ID"`. Never use admin/instructor credentials. |
+| CLI accepts only one selector | Set either `AZURE_TENANT_ID` or `AZURE_SUBSCRIPTION_ID`, not both. Exact subscription helps disambiguate signed-in accounts without application changes to the CLI default. Tenant match alone is insufficient. |
+| 403 project/agent | Customer admin verifies human Foundry User on the project, parent Reader if needed, project runtime identity and exact denied action; allow propagation. No blanket Owner. |
+| 403 upload | Check actual File Search setup/runtime backing access; human Storage Blob Data Contributor only if the real upload path requires it. |
+| Deployment not found | Check own project and **deployment name**, not catalog model name; customer model operator verifies availability, then preflight. |
+| 404 `agents` / API path | Use Foundry (new), not hub connection strings/classic; SDK 2.10.0 and project endpoint. |
+| 400 tool/model support | Customer operator verifies Responses + function calling + File Search for actual version/region/deployment; choose approved compatible model, then preflight/register/smoke. |
+| 429 / quota | Stop loops. Customer quota/budget operator checks Retry-After/capacity; manual retry later or deliberate approved deployment change. |
+| Timeout/network | Customer IT checks endpoint/DNS/private route. No endless retry; inspect owned IDs for failed actions. |
+| Ingestion not completed | Check status/storage/file; do not register. Retain manifest, scoped cleanup, retry only after repair. |
+| `A store already exists` | Reuse it or scoped cleanup for deliberate rebuild; do not delete the manifest and forget cloud assets. |
+| Store expired | One-day inactivity expiry; cleanup, upload again, register a new version. |
+| Missing citation | Explicit policy/File Search question; correct store, ingestion and active version. Plain filename is no replacement. |
+| `No active starter agent` | `register --allow-cloud --track starter`. Tracks never mix silently. |
+| Prompt edited, behavior unchanged | Save **and** register a new version; check printed/manifest version. |
+| Starter inventory rejected | Implement the TODO in `starter\inventory.py`; `python -m unittest starter.checks -v`. |
+| Tool budget exhausted | Reduce needless calls/clarify prompt. No approval after error; do not blindly remove limits. |
+| Response `incomplete` | Check output/reasoning needs and approved model choice. A runtime budget edit needs tests and a new cost estimate. |
+| Approval denied | Both `--enable-local-drafts` **and** exact displayed `APPROVE <id>` required. Chat `yes`, model text and pipes are not human terminal approval. |
+| Old proposal ID no longer matches | Policy content/hash is part of the ID. Translation changes it; inspect and approve only the newly displayed ID, never migrate private drafts to force a match. |
+| First demo returns `duplicate` | Identical policy/SKU/quantity already saved in that DB; correct idempotency, not a real order. |
+| SQLite locked | Close your DB viewers/debugger connections. Connections are explicitly closed; never stop unrelated system processes. |
+| Windows/OneDrive locks `cloud-state.json` | Bounded retries handle transient locks; persistent errors remain visible. Preserve `cloud-state.new`/manifest, close own file/sync access and resume deliberately. Do not delete ownership evidence. Use an approved nonsynchronized folder for private data. |
+| Debugger waits without input | Use integrated terminal, not Debug Console, for `input()`. |
+| No portal traces | Monitoring target/view may be unavailable. Show local diagnostics/response IDs; this repo has no automatic OTel export. |
+| Partial cleanup | Retain manifest, repair exact access/error with customer admin and repeat the same scoped command. |
+| Manifest belongs to another project | Restore original configuration privately and clean only that approved scope. Never continue with foreign IDs. |
 
-## Reproduzierbarer lokaler Gesundheitscheck
+## Reproducible local health check
 
 ```powershell
 $env:PYTHONUTF8 = "1"
@@ -54,5 +59,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe scripts\check_links.py
 ```
 
-Erst danach bei vorhandenen Rechten bewusst einen Cloud-Preflight/Smoke
-ausführen. Keine erfolgreichen Offlinechecks als Live-Verifikation ausgeben.
+Only then, with actual customer access and cost approval, deliberately run a cloud
+preflight/smoke. Unexecuted individual cloud acceptance stays `NOT_RUN`; a known
+missing prerequisite is `BLOCKED` plus customer owner/action. Offline learning
+or approved teammate observation is not an individual live verification.

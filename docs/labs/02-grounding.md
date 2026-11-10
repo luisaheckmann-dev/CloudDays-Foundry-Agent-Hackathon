@@ -1,133 +1,122 @@
-# Lab 02 — File Search, Indexstatus, Versionen und echte Zitate
+# Lab 02 — File Search, index status, versions and real citations
 
-**30 Minuten · 01:10–01:40 · Ergebnis:** eine versionierte, dateigestützte
-Agentantwort. Danach **10 Minuten Pause**. [Zurück](01-portal.md) · [Weiter](03-tools.md)
+**30 minutes · 01:10–01:40 · Outcome:** a versioned, file-grounded agent response.
+Then **10-minute break**. [Back](01-portal.md) · [Next](03-tools.md)
 
-**Voraussetzung:** `.env` korrekt, Cloud-Preflight erfolgreich. Alle Terminalbefehle
-im Repositoryordner. Dieser Lab deployed **Agentdefinition + Tool-Metadaten**,
-keine gehostete Python-Anwendung.
+**Prerequisite:** own-customer `.env`, identity/access and successful cloud
+preflight. Commands run in the repo. This lab deploys **agent definition and
+tool metadata**, not a hosted Python application. Customer pays cloud costs.
 
-## 1. Synthetische Belege untersuchen — 4 Minuten
+## 1. Inspect the synthetic evidence — 4 minutes
 
-1. Öffne in VS Code
-   [aktuelle Richtlinie](../../data/policy/order-policy-2026-11.txt).
-2. Markiere Policy-ID, Gültigkeit, Maximum **20**, Bestandsgrenze und Freigabe.
-3. Öffne [Archiv](../../data/policy/archive-policy-2025.txt).
-4. Prüfe: Maximum 100 ist ausdrücklich **zurückgezogen**.
-5. Öffne [Inventar](../../data/inventory.json). `CD-100` hat **12**, `CD-200`
-   hat **3**, `CD-400` ist gesperrt. Kein Dokument behauptet ein Lieferdatum.
+1. Open [current policy](../../data/policy/order-policy-2026-11.txt).
+2. Identify policy ID, effective date, maximum **20**, stock limit and approval.
+3. Open [archive](../../data/policy/archive-policy-2025.txt): maximum 100 is
+   explicitly **withdrawn**.
+4. Open [inventory](../../data/inventory.json): `CD-100` has **12**, `CD-200`
+   has **3**, `CD-400` is blocked. No document supplies a delivery date.
 
-**Erklärung:** Die zwei Policy-Dateien werden indexiert. Der JSON-Snapshot bleibt
-lokal und wird später per Pythonfunktion gelesen. Die Angriffsdatei unter
-`data\adversarial` wird bewusst **nicht** hochgeladen.
+The two policy files are indexed. The JSON snapshot stays local for Python.
+The attack file in `data\adversarial` is deliberately **not uploaded**.
 
-**Checkpoint:** Du weißt vor dem Modellaufruf, welche Antworten sachlich richtig sind.
+**Checkpoint:** you know the correct facts before asking the model.
 
-## 2. Hochladen und vollständige Indexierung abwarten — 8 Minuten
+## 2. Upload and wait for complete indexing — 8 minutes
 
-1. Öffne das integrierte PowerShell-Terminal.
-2. Starte explizit:
+1. In integrated PowerShell run explicitly:
 
    ```powershell
    .\.venv\Scripts\python.exe -m orderops upload --allow-cloud
    ```
 
-3. Warte auf **beide** Meldungen `[completed]` und `File Search bereit`.
-4. Öffne anschließend lokal:
+2. Wait for **both** `[completed]` messages and `File Search ready`.
+3. Privately inspect:
 
    ```powershell
    Get-Content .local\cloud-state.json
    ```
 
-5. Prüfe, dass `file_ids` zwei IDs enthält und `active_vector_store` gesetzt ist.
-   Endpoints und IDs aus diesem ignorierten Manifest nicht veröffentlichen.
+4. Verify two `file_ids` and a populated `active_vector_store`. Do not publish
+   endpoint/IDs from this ignored customer manifest.
 
-**Was der Code tut:** Store mit eintägiger Inaktivitätsablauffrist erstellen,
-Datei hochladen (`purpose="assistants"` ist auch im neuen Files-API der
-unterstützte Uploadzweck), dem Store zuordnen und Status pollen. Dieser Parameter
-bedeutet **nicht**, dass wir das alte Assistants-/Threads-/Runs-API nutzen.
-Je Datei maximal 180 Sekunden Polling; Netzwerkaufrufe zusätzlich begrenzt.
+**Code behavior:** create a store expiring after one day of inactivity; upload
+files with supported Files API `purpose="assistants"`, attach and poll status.
+That purpose does **not** mean we use the classic Assistants/Threads/Runs API.
+Polling max 180 seconds per file; network calls are separately bounded.
 
-**Erwartung:** erst nach erfolgreicher Indexierung wird der Store aktiv gesetzt.
-Ein Upload allein ist noch kein suchbereites Dokument.
+**Expected:** only completed indexing activates the store. Upload alone does
+not make a file searchable.
 
 **Recovery:**
 
-- **403 Upload:** Rolle **Storage Blob Data Contributor** auf dem tatsächlich
-  verwendeten Projektstorage und Foundry-Rolle durch Lehrperson prüfen.
-- **failed/cancelled/Timeout:** keinen Erfolg behaupten. Fehlermeldung und
-  Manifest behalten, Ursachen prüfen. Nach gezieltem
-  [Cleanup](06-cleanup.md) erneut hochladen.
-- **Bereits ein Store vorhanden:** nicht mehrfach hochladen. Für dieses Lab
-  vorhandenen Store verwenden; das Programm blockiert versehentliche Duplikate.
-- **Store abgelaufen:** Cleanup entfernt auch bereits fehlende Objekte sicher;
-  danach Upload und Registrierung wiederholen.
+- **403:** customer admin checks human project role and actual runtime/backing
+  setup. Human Storage Blob Data Contributor only on real upload storage if needed.
+- **failed/cancelled/timeout:** no pass. Retain error/manifest, diagnose, then
+  [scoped cleanup](06-cleanup.md) before retry.
+- **A store already exists:** reuse; deliberate rebuild requires scoped cleanup,
+  not deleting ownership records and uploading duplicates.
+- **Expired store:** cleanup tolerates missing objects; then upload/register again.
 
-## 3. Den ersten referenzfähigen Agenten registrieren — 5 Minuten
+## 3. Register the first referenceable agent — 5 minutes
 
-1. Für einen zuverlässigen ersten Grounding-Beweis nutze bewusst die Referenz:
+1. Deliberately use the reference for a reliable first grounding proof:
 
    ```powershell
    .\.venv\Scripts\python.exe -m orderops register --allow-cloud --track solution
    ```
 
-2. Lies Name und **Version** in der Ausgabe.
-3. Öffne im Portal **Build → Agents**, aktualisiere die Liste und wähle den
-   Agentnamen aus `.env` (nicht den separaten `-portal`-Agenten).
-4. Wähle, falls angeboten, die gerade registrierte Version.
-5. Kontrolliere Modell, Instructions und Tools. Falls die UI Tooldetails nicht
-   vollständig zeigt, öffne [cloud.py](../../orderops/cloud.py):
-   `PromptAgentDefinition` enthält FileSearchTool und zwei FunctionTools.
-6. Keine Tools im Portal entfernen: Der reproduzierbare Versionsstand kommt aus Code.
+2. Read printed name and **version**.
+3. In **Build → Agents**, refresh and choose the `.env` agent, not `-portal`.
+4. Select the registered version if offered; inspect model, instructions and tools.
+5. If tool details are hidden, inspect [cloud.py](../../orderops/cloud.py):
+   `PromptAgentDefinition` includes FileSearchTool and two FunctionTools.
+6. Do not remove tools in the portal; reproducible versions come from code.
 
-**Erwartung:** `Registriert: … Version … / solution`.
-`active_agent` im Manifest entspricht exakt diesem Stand. Weitere `register`-
-Aufrufe erzeugen neue Versionen, kein In-place-Patching.
+**Expected:** `Registered: … version … / solution`; manifest `active_agent`
+matches. Each `register` creates a new version, not an in-place patch.
 
-**Checkpoint:** „Agentdefinition deployed“ ist korrekt. „Python ins Portal
-deployed“ wäre hier falsch.
+**Checkpoint:** "agent definition deployed" is correct; "Python deployed to
+the portal" is not.
 
-## 4. Eine Antwort mit technischer Zitatannotation prüfen — 8 Minuten
+## 4. Verify a response with a technical citation — 8 minutes
 
-1. Stelle eine reine Policyfrage über den CLI:
+1. Ask a policy-only question:
 
    ```powershell
-   .\.venv\Scripts\python.exe -m orderops chat --allow-cloud --track solution --prompt "Welche aktuelle Mengenobergrenze gilt? Suche die Policy und zitiere order-policy-2026-11.txt."
+   .\.venv\Scripts\python.exe -m orderops chat --allow-cloud --track solution --prompt "What is the current quantity limit? Find the policy and cite order-policy-2026-11.txt."
    ```
 
-2. Lies unter der Antwort **FILE-SEARCH-ZITATE**.
-3. Prüfe `filename`, `file_id` und die bekannte ID aus `file_ids` im Manifest.
-4. Öffne die lokale aktuelle Richtlinie und prüfe, ob die zitierte Aussage
-   wirklich enthalten ist: **20, OPS-2026-11**.
-5. Vergleiche mit der Aussage „Quelle: order-policy-2026-11.txt“ **ohne**
-   Annotation. Dieser bloße Text wäre kein technischer Retrievalnachweis.
-6. Teste den Gesamtpfad mit explizitem Cloud-Smoke:
+2. Read **FILE-SEARCH CITATIONS** beneath the response.
+3. Check `filename`, `file_id` and matching manifest `file_ids`.
+4. Open the source (the local current policy, plus the portal source view if
+   exposed) and verify that it supports the claim: **20, OPS-2026-11**.
+5. Compare a plain "Source: order-policy-2026-11.txt" with **no** annotation:
+   that text alone proves no retrieval.
+6. Check the integrated path:
 
    ```powershell
    .\.venv\Scripts\python.exe -m orderops smoke --allow-cloud --track solution
    ```
 
-**Erwartung:** reale Antwort, bekannte Zitatannotation und erfolgreiche lokale
-read-only Inventarfunktion. Der Smoke fragt keine Entwürfe an und bietet kein
-Schreibgate an. Ein Pass belegt diese Integrationsstruktur, **nicht** die komplette
-semantische Qualität, alle Modellfälle oder echtes IQ.
+**Expected:** real response, known citation annotation and successful local
+read-only inventory function under **your own customer identity**. Smoke asks
+for no drafts and offers no write gate. Passing proves this integration
+structure, **not** all semantic quality, every model case or real IQ.
+Record actual own-identity evidence; until executed, acceptance is `NOT_RUN`.
+If blocked, record action/customer owner; admin/teammate success is not your pass.
 
-**Recovery:** Leere Zitatliste → Prompt muss File Search verlangen; richtigen
-Store/Agentversion prüfen, Ingestionstatus prüfen. Kein Dateiname als
-nachträgliches Fakezitat hinzufügen. `incomplete` → begrenztes Ausgabebudget/
-Reasoningbedarf des gewählten Modells mit Lehrperson prüfen; kostenbewusst anderes
-freigegebenes Deployment wählen und Preflight + register + smoke erneut ausführen.
+**Recovery:** empty citations → explicit File Search request, correct store,
+version and ingestion status; never add a fake citation afterward.
+`incomplete` → customer operator checks reasoning/output needs, budget and
+compatible approved deployment; repeat preflight/register/smoke deliberately.
 
-## 5. Starter und Versionswechsel vorbereiten — 5 Minuten
+## 5. Prepare starter and version switching — 5 minutes
 
-1. Ergänze im [Starterprompt](../../starter/instructions.txt) deine Regeln für
-   aktuelle vs. archivierte Policy und fehlende Lieferzusagen.
-2. Erkläre dem Partner: Der erfolgreiche Solution-Smoke hat deine noch offene
-   Starter-Inventarfunktion **nicht** implementiert.
-3. Belasse die aktive Solution-Version für den Moment. Erst in Lab 03
-   registrierst du ausdrücklich `--track starter`.
-4. Stoppe vor der Pause jeden Chat mit `exit` bzw. `Ctrl+C`.
+1. Add current/archive policy and missing-delivery rules to your
+   [starter prompt](../../starter/instructions.txt).
+2. Explain to your partner: solution smoke did **not** implement your starter TODO.
+3. Leave solution active for now; Lab 03 explicitly registers `--track starter`.
+4. Stop every chat before the break with `exit` or `Ctrl+C`.
 
-**Abschlusscheckpoint:** Du hast einen echten File-Search-Beleg und weißt, dass
-dieser Pfad **kein Foundry IQ Knowledge-Base-/MCP-Pfad** ist. Falls Cloud-Smoke
-fehlgeschlagen ist: Fehlerstatus bleibt offen, auch wenn Offline-Tests grün sind.
+**Final checkpoint:** real File Search evidence is **not** a Foundry IQ KB/MCP
+integration. Failed cloud smoke stays unresolved even if offline tests pass.

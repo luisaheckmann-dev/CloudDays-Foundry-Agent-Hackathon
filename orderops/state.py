@@ -10,10 +10,10 @@ def read_state(settings, *, create=False):
     if path.exists():
         state = json.loads(path.read_text(encoding="utf-8"))
         if state["endpoint"] != settings.endpoint or state["agent_name"] != settings.agent:
-            raise ValueError("Cloud-Manifest gehört zu anderem Projekt/Agent. Erst mit alter .env bereinigen.")
+            raise ValueError("Cloud manifest belongs to another project/agent. Clean up using the original .env first.")
         return state
     if not create:
-        raise ValueError("Kein Cloud-Manifest. Zuerst upload und register ausführen (Lab 02).")
+        raise ValueError("No cloud manifest. Run upload and register first (Lab 02).")
     return {"endpoint": settings.endpoint, "agent_name": settings.agent,
             "vector_store_ids": [], "file_ids": [], "versions": [], "response_ids": [],
             "active_vector_store": None, "active_agent": None}

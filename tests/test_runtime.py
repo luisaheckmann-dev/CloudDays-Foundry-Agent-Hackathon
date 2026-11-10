@@ -9,7 +9,7 @@ from orderops.runtime import citations_from, run_agent
 from orderops.tools import Dispatcher
 
 
-def response(response_id, calls=None, text="Empfehlung", status="completed"):
+def response(response_id, calls=None, text="Recommendation", status="completed"):
     return NS(id=response_id, output=calls or [], output_text=text, status=status,
               usage=NS(total_tokens=30))
 
@@ -25,7 +25,7 @@ class RuntimeTests(unittest.TestCase):
         reference = {"type": "agent_reference", "name": "local", "version": "7"}
         dispatcher = Dispatcher()
         recorder = Mock()
-        result = run_agent(client, reference, "Prüfe CD-100", dispatcher, on_response=recorder)
+        result = run_agent(client, reference, "Check CD-100", dispatcher, on_response=recorder)
         self.assertEqual(result.calls, 1)
         self.assertEqual(result.tokens, 60)
         second = client.responses.create.call_args_list[1].kwargs
@@ -48,7 +48,7 @@ class RuntimeTests(unittest.TestCase):
         client = Mock()
         client.responses.create.side_effect = [response(str(i), [call()]) for i in range(10)]
         dispatcher = Dispatcher()
-        with self.assertRaisesRegex(RuntimeError, "Toolbudget"):
+        with self.assertRaisesRegex(RuntimeError, "Tool budget"):
             run_agent(client, {}, "test", dispatcher, max_rounds=2)
         self.assertEqual(client.responses.create.call_count, 2)
         self.assertEqual(len(dispatcher.events), 1)

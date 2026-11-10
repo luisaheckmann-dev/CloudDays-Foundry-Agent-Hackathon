@@ -1,72 +1,76 @@
-# Lab 06 — Pitch, gezieltes Cleanup und Schlusskontrolle
+# Lab 06 — Pitch, scoped cleanup and final check
 
-**10 Minuten · 03:20–03:30 · Ergebnis:** Kurzbeweis und keine vergessenen eigenen
-Workshopartefakte. [Zurück](05-hackathon.md) · [Start](../../README.md)
+**10 minutes · 03:20–03:30 · Outcome:** short proof and no forgotten owned
+workshop artifacts. [Back](05-hackathon.md) · [Home](../../README.md)
 
-## 1. Pitch — 4 Minuten
+## 1. Pitch — 4 minutes
 
-1. Die Lehrperson wählt 2–3 Teams für je 60 Sekunden aus.
-2. Zeigt eine echte Quelle und eine abgelehnte Freigabe oder einen Negativtest.
-3. Benennt den ausgeführten Pfad: Cloud Prompt Agent **oder** lokale Simulation.
-4. Sagt ausdrücklich, ob es einen echten IQ-Knowledge-Base-/MCP-Nachweis gab.
-   Der normale File-Search-Pfad darf nicht so bezeichnet werden.
+1. The facilitator selects 2–3 teams for 60 seconds each.
+2. Show a real source and denied approval or a negative test.
+3. Name the executed path: cloud prompt agent **or** local simulation.
+4. Explicitly state whether real IQ KB/MCP evidence exists. Normal File Search
+   must not be described as IQ. Own-customer acceptance not executed is `NOT_RUN`;
+   known missing prerequisites stay `BLOCKED` with customer owner/action.
 
-## 2. Nur manifestierte SDK-Artefakte entfernen — 3 Minuten
+## 2. Remove only manifested SDK artifacts — 3 minutes
 
-1. Beendet Chats/Debugger. Keine parallelen Upload-/Register-/Cleanup-Prozesse starten.
-2. Prüft lokal das Manifest:
+1. Stop chats/debuggers; no concurrent upload/register/cleanup processes.
+2. Privately inspect:
 
    ```powershell
    Get-Content .local\cloud-state.json
    ```
 
-3. Kontrolliert Projektendpoint, Agentname und die aufgelisteten Versionen,
-   Files, Vector Stores und Responses. Das Cleanup löscht **nur diese IDs**.
-4. Kopiert den exakten Agentnamen aus eurer eigenen `.env` als Bestätigung:
+3. Check own customer project endpoint, agent name and listed versions, files,
+   vector stores and Responses. Cleanup deletes **only those IDs**; confirm
+   their ownership and customer approval first.
+4. Use the exact agent name from your own `.env`:
 
    ```powershell
-   .\.venv\Scripts\python.exe -m orderops cleanup --allow-cloud --confirm "EUER-EXAKTER-AGENTNAME"
+   .\.venv\Scripts\python.exe -m orderops cleanup --allow-cloud --confirm "YOUR-EXACT-AGENT-NAME"
    ```
 
-5. Erwartung: nur manifestierte Agentversionen, Responses, Vector Stores und
-   Files entfernt. Bereits fehlende Ressourcen (404) gelten als entfernt.
-6. Bei Teilfehler bleibt das Manifest erhalten. Fehler prüfen und denselben
-   Befehl erneut ausführen. **Nicht** zuerst das Manifest löschen.
+5. Expected: only manifested versions, Responses, stores and files removed.
+   Already absent objects (404) count as removed.
+6. On partial failure retain the manifest, diagnose and repeat the same scoped
+   command. **Do not delete the manifest first.**
 
-**Nicht gelöscht:** Foundry-Projekt/-Ressource, Modell, Azure AI Search, Storage,
-Rollen, Resource Group, fremde Agenten, Portalagent, lokale Drafts. Auch eine
-eintägige Vector-Store-Ablauffrist ersetzt dieses Cleanup nicht; hochgeladene
-Dateien separat zu entfernen ist Teil des Befehls.
+**Not deleted:** Foundry project/resource, model, Search, Storage, roles, RG,
+other agents, portal agent or local drafts. One-day store expiry does not
+replace cleanup; uploaded files are separately removed by this command.
 
-**Recovery:** Kein Manifest → wahrscheinlich nur Portal/Offline gearbeitet;
-keine Cloud-IDs erraten. Anderes Projekt im Manifest → ursprüngliche `.env`
-wiederherstellen und dort gezielt bereinigen. 403 → Lehrperson räumt exakt
-die notierten IDs auf, nicht die ganze geteilte Resource Group.
+**Recovery:** no manifest → perhaps only portal/offline used; do not guess IDs.
+Wrong project → restore original own configuration and clean that approved scope.
+403 → authorized customer admin handles the exact recorded IDs, not the shared
+RG. Facilitators guide; they do not need customer roles.
 
-## 3. Portalagent und lokale Daten bewusst bereinigen — 3 Minuten
+## 3. Deliberately clean portal agent and local data — 3 minutes
 
-1. Öffnet im Portal **Build → Agents**.
-2. Sucht **exakt euren eigenen `…-portal`-Agenten** aus Lab 01.
-3. Prüft Name/Projekt. Öffnet dessen Menü **… → Delete** bzw. die verfügbare
-   versionsbezogene Löschaktion und bestätigt nur diesen eigenen Agenten.
-4. Prüft im SDK-Agenten, dass die manifestierten Versionen verschwunden sind.
-   Eventuelle andere, nicht von diesem Repo angelegte Versionen bleiben bestehen.
-5. Erst nach abgeschlossenem Cloudcleanup lokale Daten entfernen, wenn gewünscht:
+1. Open **Build → Agents** in your customer project.
+2. Find **exactly your own `…-portal` agent** from Lab 01.
+3. Verify name/project, then **… → Delete** or the available version-specific
+   delete action. Confirm only that owned artifact.
+4. Verify manifested SDK versions are gone; unrelated versions stay.
+5. Only after completed cloud cleanup, optionally remove your own local
+   synthetic outputs under customer retention policy:
 
    ```powershell
-   # Nur eigene lokale Workshopartefakte, keine Azure-Ressourcen:
+   # Only your own local workshop artifacts, not Azure resources:
    if (Test-Path .local\drafts.sqlite3) { Remove-Item .local\drafts.sqlite3 }
    if (Test-Path .local\evaluation-results.jsonl) { Remove-Item .local\evaluation-results.jsonl }
    if (Test-Path .local\diagnostics.jsonl) { Remove-Item .local\diagnostics.jsonl }
    ```
 
-6. `.env` bei gemeinsam genutztem Rechner ebenfalls bewusst entfernen; Azure CLI
-   ggf. mit `az logout` abmelden. Auf dem eigenen Rechner nach eigener Policy handeln.
+6. On a shared machine remove your private `.env` deliberately and sign out
+   using `az logout` if customer policy requires it. On your own machine follow
+   your policy. Git ignore does not prevent OneDrive sync.
 
-**Instructor-Nachlauf:** Eigene Workshop-Modelldeployments, Search-KBs/Indexes,
-Storage, optionale Hosted-Agent-Compute und Observabilityressourcen prüfen.
-Nur dedizierte, eindeutig zugeordnete Ressourcen mit Genehmigung entfernen.
-Es gibt hier absichtlich **keinen** pauschalen Resource-Group-Löschbefehl.
+**Customer-owner follow-up:** inspect remaining dedicated deployments, Search
+KB/indexes, Storage, Cosmos, optional hosted compute and monitoring, billing and
+retention. Remove only explicitly approved dedicated assets after dependency
+checks; shared resources need owner agreement. Track outstanding costs/access
+with a customer owner/action. There is deliberately **no broad RG delete command**.
+Deletion does not promise immediate erasure of compliance/backup copies.
 
-**Letzter Checkpoint:** Was ist Agentdefinition, wo läuft Python, welche Quelle
-ist echt, wer durfte schreiben, welche Kostenressourcen bleiben bestehen?
+**Final checkpoint:** what is the agent definition, where does Python run,
+which source is real, who could write, and which cost resources remain?

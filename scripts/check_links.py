@@ -31,7 +31,7 @@ def main():
     if errors:
         print("\n".join(errors))
         return 1
-    print(f"PASS: {checked} interne relative Markdown-Links.")
+    print(f"PASS: {checked} internal relative Markdown links.")
     return 0
 
 

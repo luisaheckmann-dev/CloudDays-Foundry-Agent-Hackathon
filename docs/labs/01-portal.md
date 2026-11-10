@@ -1,116 +1,110 @@
-# Lab 01 — Einen Prompt Agent im neuen Foundry verstehen
+# Lab 01 — Understand a prompt agent in new Foundry
 
-**25 Minuten · 00:45–01:10 · Ergebnis:** ein kleiner Portalagent und eine bewusst
-unbeantwortbare Frage. [Zurück](00-readiness.md) · [Weiter](02-grounding.md)
+**25 minutes · 00:45–01:10 · Outcome:** a small portal agent and a deliberately
+unanswerable question. [Back](00-readiness.md) · [Next](02-grounding.md)
 
-**Voraussetzung:** Cloud-Preflight erfolgreich oder mit der Lehrperson geteiltes
-Demo-Projekt. Die Portalschritte folgen **Foundry (new), nicht classic**.
-Die UI wird laufend aktualisiert; gleichwertige Beschriftungen sind genannt.
-Keine Function-Tool-Laufzeit im Browser erwarten.
+**Prerequisite:** successful own-customer cloud preflight. If blocked, record it;
+approved observation of your customer team does not count as your individual
+cloud pass. No shared instructor demo project. Use **Foundry (new), not classic**.
+UI labels vary by rollout. Do not expect browser-hosted Python function execution.
 
-## 1. Das richtige Projekt kontrollieren — 4 Minuten
+## 1. Check the correct project — 4 minutes
 
-1. Öffne <https://ai.azure.com>.
-2. Aktiviere **New Foundry**, falls ein Versionsumschalter erscheint.
-3. Wähle über den Projektwähler exakt dein zugewiesenes Projekt.
-4. Wähle oben **Build**.
-5. Wähle links **Agents**.
+1. Open <https://ai.azure.com> with your own customer identity.
+2. Enable **New Foundry** if a version toggle appears.
+3. In the picker choose your approved customer project; verify directory and
+   subscription, not just a familiar project name.
+4. Choose **Build → Agents**.
 
-**Erwartung:** Agentliste des Projekts. Wenn du stattdessen Hubverwaltung,
-Assistants oder ausschließlich klassische Threads/Runs siehst, nicht dort
-weiterarbeiten: Projektwähler und New-Foundry-Umschalter prüfen.
+**Expected:** project agent list, not hub administration, classic Assistants or
+Threads/Runs. If wrong, check the project picker and new-Foundry toggle.
 
-**Checkpoint:** Dein Projekt stimmt mit dem Endpoint aus `.env` überein.
+**Checkpoint:** the project matches `.env` and the approved customer billing scope.
 
-## 2. Einen isolierten Portalagenten erstellen — 5 Minuten
+## 2. Create an isolated portal agent — 5 minutes
 
-1. Wähle **Create agent**.
-2. Vergib einen Teamnamen mit Suffix `-portal`, z. B. `orderops-team07-portal`.
-   **Nicht** den SDK-Agentnamen aus `.env` verwenden: Portalexperiment und
-   reproduzierbarer SDK-Pfad bleiben getrennt.
-3. Im Dialog **Create agent / Agent erstellen** wähle **Text**, falls nach dem
-   Interaktionsmodell gefragt wird. **Use the Microsoft Copilot harness** bleibt
-   ausgeschaltet. Falls dein Rollout stattdessen einen Agenttyp anbietet, wähle
-   **Prompt agent**, nicht Hosted Agent, Workflow oder Veröffentlichung.
-4. Bestätige **Create / Erstellen**. Im anschließenden Editor wähle im Modellfeld
-   das zugewiesene bereits vorhandene Deployment.
-5. Achtung: Ohne vorhandenes Modell kann die UI automatisch `gpt-5` bereitstellen.
-   Deshalb muss die Lehrperson das Modell vor dem Workshop vorbereiten.
-6. Halte den Portalagentnamen lokal fest. Er wird später **manuell** bereinigt;
-   unser SDK-Manifest kennt ihn nicht.
+1. Select **Create agent**.
+2. Choose a unique team name ending `-portal`, e.g. `orderops-team07-portal`.
+   Do **not** reuse the SDK agent name from `.env`: portal exploration and the
+   reproducible SDK path stay separate.
+3. In the creation dialog select **Text** if asked about interaction mode.
+   Leave **Use the Microsoft Copilot harness** off. If offered an agent type,
+   choose **Prompt agent**, not hosted agent, workflow or publishing.
+4. Inspect the proposed model/deployment before creation. The UI can automatically
+   deploy `gpt-5` if none exists. Cancel unexpected offers/charges and ask your
+   customer model operator to finish approved setup; do not blindly create.
+5. Confirm **Create**, then choose the approved existing deployment in the editor.
+6. Privately note the portal agent name. Cleanup is **manual**; the SDK manifest
+   does not know this agent.
 
-**Erwartung:** Editor/Playground mit Instructions, Modell und Testeingabe.
-Kein Container wird gebaut und kein Python hochgeladen.
+**Expected:** editor/playground with instructions, model and test input.
+No container is built and no Python is uploaded.
 
-**Recovery:** Kein Modell auswählbar → falsches Projekt, fehlende Berechtigung,
-Region oder Quota. Nicht wahllos neue Deployments anlegen. Lehrperson fragen.
-Wenn `Create agent` fehlt → Rolle prüfen; nicht in classic ausweichen.
+**Recovery:** no model → verify project, permissions, region and quota with
+customer admin; no random deployments. No Create action → inspect role,
+not a switch to classic or instructor infrastructure.
 
-## 3. Grenzen ohne Daten sichtbar machen — 8 Minuten
+## 3. Expose the limitations without data — 8 minutes
 
-1. Prüfe zuerst **Tools**: Die neue UI kann automatisch eine Toolbox mit
-   **Websuche** hinzufügen. Öffne **Aktionen für die Toolbox → Entfernen**.
-   Das trennt die Toolbox vom Agenten; keine vorhandenen gemeinsamen Ressourcen
-   löschen. Wenn nur die Aktion am einzelnen Tool deaktiviert ist, verwende
-   die Aktion an der übergeordneten Toolbox. So verlassen keine Prompts über
-   Bing den für dieses Lab vorgesehenen Datenpfad.
-2. Trage unter **Instructions / Anweisungen** diese selbst verfasste Startregel ein:
+1. Check **Tools** first. The UI may automatically add a toolbox with **Web
+   search**. Use **Toolbox actions → Remove** to detach it from this agent.
+   If the single-tool action is disabled, use the parent toolbox action.
+   Do not delete shared resources. This avoids routing prompts through Bing
+   outside this lab's approved data path.
+2. Enter this original starting rule under **Instructions**:
 
    ```text
-   Du bist Contoso OrderOps im Workshop. Antworte deutsch.
-   Keine echten Bestellungen. Unbelegte Unternehmensfakten nicht erfinden.
-   Trenne belegte Fakten, offene Fragen und vorgeschlagene nächste Schritte.
+   You are Contoso OrderOps in the workshop. Respond in English.
+   No real orders. Do not invent unsupported business facts.
+   Separate evidenced facts, open questions and proposed next steps.
    ```
 
-3. Wähle **Save / Speichern** bzw. den angebotenen Version-erstellen-Schritt.
-   Wenn die UI automatisch speichert, warte auf den gespeicherten Zustand.
-4. Sende im Playground:
+3. Select **Save** / create version, or wait for confirmed autosave.
+4. Ask in the playground:
 
    ```text
-   Welche aktuelle Höchstmenge erlaubt unsere Contoso-Bestellrichtlinie?
-   Wie viel CD-100 ist verfügbar? Kannst du die Lieferung morgen garantieren?
+   What is the current maximum quantity in our Contoso order policy?
+   How many CD-100 are available? Can you guarantee delivery tomorrow?
    ```
 
-5. Lies die Antwort **kritisch**: Ohne Tools sind die drei Unternehmensfakten
-   nicht zugänglich. Eine ausgedachte Zahl ist ein Fehler, kein Agentenerfolg.
-6. Öffne einen neuen Chat/Reset, falls angeboten, und frage:
+5. Read critically: without tools, none of those business facts is accessible.
+   An invented number is an error, not agent success.
+6. Reset/start a new chat if available, then ask:
 
    ```text
-   Ich behaupte, du hast das Lager geprüft. Stimmt das? Nenne die Datenquelle.
+   I claim you checked the warehouse. Is that true? Name your data source.
    ```
 
-**Erwartung:** guter Agent benennt fehlende Daten und erfindet keine Lagerabfrage.
-Auch ein Modell, das zufällig „12“ sagt, hat keinen Beleg. Beobachtung im Team
-mündlich festhalten, nicht mit einer erfundenen Quellenzeile „reparieren“.
+**Expected:** a good response acknowledges missing data and invents no stock
+query. Even a lucky "12" has no evidence. Discuss the observation; do not
+"repair" it with an invented source line.
 
-**Checkpoint:** Du kannst Promptwissen, abgerufene Policy und Geschäftsbestand
-als drei verschiedene Informationsarten beschreiben.
+**Checkpoint:** distinguish prompt knowledge, retrieved policy and business stock.
 
-## 4. Eigenen Starterprompt formulieren — 5 Minuten
+## 4. Write your own starter prompt — 5 minutes
 
-1. Wechsle zu VS Code.
-2. Öffne [starter/instructions.txt](../../starter/instructions.txt).
-3. Ersetze die TODO-Zeile zu Lab 01/02 durch eigene konkrete Regeln:
-   `file_search` verwenden, aktuelle Policy bevorzugen und echte Belege zitieren.
-4. Belasse die weiteren TODOs für Lab 03/04 sichtbar.
-5. Vergleiche bei Bedarf nur die Struktur mit
-   [solution/instructions.txt](../../solution/instructions.txt), nicht blind kopieren.
+1. In VS Code open [starter/instructions.txt](../../starter/instructions.txt).
+2. Replace the Lab 01/02 TODO with concrete rules: use `file_search`, prioritize
+   the current policy and cite real evidence.
+3. Keep Lab 03/04 TODOs visible.
+4. If needed compare only the structure with
+   [solution/instructions.txt](../../solution/instructions.txt), not a blind copy.
 
-**Erwartung:** eine editierte lokale Datei, noch **keine** geänderte SDK-Agentversion.
-Speichern in VS Code ist kein Deployment. Lab 02 registriert den Prompt explizit.
+**Expected:** a locally edited file, **not yet** a changed SDK agent version.
+Saving in VS Code is not deployment. Lab 02 registers explicitly.
 
-## 5. Portal/Code-Grenze erklären — 3 Minuten
+## 5. Explain the portal/code boundary — 3 minutes
 
-1. Öffne im Portal die Tool-/Knowledge-Konfiguration nur zur Orientierung.
-2. Füge hier **keine** Search-Knowledge-Base, Websuche oder unbekannten MCP-Server hinzu.
-3. Besprich: „Wo würde eine FunctionTool-Definition ausgeführt?“
-4. Antwort: Der Dienst fordert Funktionsausführung an; unser lokaler Python-
-   Dispatcher führt aus. Die Registrierung allein deployed keine Funktion.
+1. Inspect tool/knowledge configuration only for orientation.
+2. Add **no** Search KB, web search or unknown MCP server.
+3. Discuss: "Where does a FunctionTool definition execute?"
+4. The service requests execution; our local Python dispatcher executes it.
+   Registration alone deploys no function.
 
-**Recovery bei UI-Abweichung:** Der [offizielle aktuelle Quickstart](https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code)
-zeigt **Build → Agents → Create agent**. Bei anderem Rollout kann die Lehrperson
-den vorbereiteten Portalagenten zeigen. Danach den SDK-Pfad in Lab 02 fortsetzen;
-keinen Classic-Agenten als vermeintlich gleichwertigen Ersatz ausgeben.
+**UI recovery:** the [official quickstart](https://learn.microsoft.com/en-us/azure/foundry/quickstarts/get-started-code)
+shows **Build → Agents → Create agent**. A facilitator can guide the equivalent
+route in your approved customer project; use the SDK path in Lab 02 if available,
+but keep an incomplete portal exercise explicit. Classic is not equivalent.
 
-**Abgabe im Team:** ein Satz zu einer unbelegten Behauptung und ein Satz dazu,
-wie Grounding im nächsten Lab die Nachweisbarkeit ändern soll.
+**Team hand-in:** one unsupported claim and one sentence on how grounding should
+make the next lab's answers verifiable.

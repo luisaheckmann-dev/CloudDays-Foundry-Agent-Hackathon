@@ -1,46 +1,51 @@
-# 210 Minuten: Ablauf und Zielbild
+# 210 minutes: schedule and learning goals
 
-[Start](../README.md) · [Lehrenden-Runbook](INSTRUCTOR.md)
+[Home](../README.md) · [Facilitator runbook](INSTRUCTOR.md)
 
-**Zielgruppe:** Intermediate; Azure-Grundkenntnisse, grundlegendes Python/JSON,
-Terminal und RBAC-Begriffe. Kein Machine-Learning-Training vorausgesetzt.
-In Zweier-/Dreierteams arbeiten; Azure-Ressourcen und Quota sind **vor** der
-Veranstaltung vorzubereiten. Die 15 Minuten Readiness reichen nicht für
-Subscription-Freigaben, Netzwerkausnahmen oder Quota-Erhöhungen.
+**Audience:** intermediate; basic Azure, Python/JSON, terminal and RBAC concepts.
+No machine-learning training required. Work in teams of two or three with
+separate customer identities. Prepare approved customer resources/quota before
+the event where possible. Facilitators help configure own-subscription access
+on the day; customer admins retain privileged operations. Readiness is a
+15-minute checkpoint, not enough for full bootstrap, subscription approval,
+network changes or quota increases. A separate clinic may take 60–90 minutes
+or more plus organizational lead time.
 
-| Zeit ab Start | Minuten | Format / Ergebnis |
+| Time from start | Minutes | Format / outcome |
 |---|---:|---|
-| 00:00–00:30 | 30 | Instructor-Demo: Beleg → Inventar → Empfehlung → abgelehnter/freigegebener lokaler Entwurf |
-| 00:30–00:45 | 15 | [00 Readiness](labs/00-readiness.md): Python, Rollen, Endpoint, Modell, Identität |
-| 00:45–01:10 | 25 | [01 Portal](labs/01-portal.md): Prompt Agent im neuen Foundry, Grenzen ohne Wissen |
-| 01:10–01:40 | 30 | [02 Grounding](labs/02-grounding.md): File Search, Indexstatus, Version, Quellen |
-| 01:40–01:50 | 10 | **Pause**; keine Polling-/Chatprozesse laufen lassen |
-| 01:50–02:25 | 35 | [03 Code & Tools](labs/03-tools.md): Python in VS Code, Toolloop, menschliches Gate |
-| 02:25–02:45 | 20 | [04 Evaluation](labs/04-evaluation.md): Gegenbeispiele, Belege, Diagnose, Rubrik |
-| 02:45–03:20 | 35 | [05 Hackathon](labs/05-hackathon.md): messbare Verbesserung und Angriffstest |
-| 03:20–03:30 | 10 | [06 Pitch & Cleanup](labs/06-cleanup.md): Kurzbeweis und gezieltes Aufräumen |
-| **Summe** | **210** | **3,5 Stunden einschließlich Pause** |
+| 00:00–00:30 | 30 | Facilitator demo: evidence → inventory → recommendation → denied/approved local draft |
+| 00:30–00:45 | 15 | [00 Readiness](labs/00-readiness.md): supported customer-access checkpoint, Python, roles, endpoint, model, identity |
+| 00:45–01:10 | 25 | [01 Portal](labs/01-portal.md): prompt agent in new Foundry, limitations without knowledge |
+| 01:10–01:40 | 30 | [02 Grounding](labs/02-grounding.md): File Search, index status, version, sources |
+| 01:40–01:50 | 10 | **Break**; stop polling/chat processes |
+| 01:50–02:25 | 35 | [03 Code & Tools](labs/03-tools.md): Python in VS Code, tool loop, human gate |
+| 02:25–02:45 | 20 | [04 Evaluation](labs/04-evaluation.md): counterexamples, evidence, diagnostics, rubric |
+| 02:45–03:20 | 35 | [05 Hackathon](labs/05-hackathon.md): measurable improvement and attack test |
+| 03:20–03:30 | 10 | [06 Pitch & Cleanup](labs/06-cleanup.md): short proof and scoped cleanup |
+| **Total** | **210** | **3.5 hours including the break** |
 
-## Am Ende kannst du …
+## By the end you can …
 
-1. Einen **serverseitig registrierten, versionierten Prompt Agent** vom lokalen
-   ausführenden Python-Prozess unterscheiden.
-2. Echte File-Search-Zitatannotationen prüfen, statt einer hübschen Quellenbehauptung zu glauben.
-3. Toolparameter serverunabhängig validieren und einen Schreibpfad technisch vom Modell trennen.
-4. Grenzen von Offline-Tests, strukturellen Checks und semantischer Evaluation erklären.
-5. Den Zusatznutzen von Foundry IQ, Fabric IQ und Work IQ korrekt einordnen, ohne
-   weitere Lizenzen für den Pflichtpfad zu benötigen.
+1. Distinguish a **server-registered, versioned prompt agent** from its local
+   executing Python process.
+2. Verify real File Search citation annotations rather than trust a source claim.
+3. Validate tool parameters in code and technically separate writes from the model.
+4. Explain the limits of offline tests, structural checks and semantic evaluation.
+5. Explain the additional value of Foundry IQ, Fabric IQ and Work IQ without
+   requiring extra licenses for the core.
 
-## Definition of Done des Pflichtpfads
+## Core definition of done
 
-- Eine eigene Starter-Funktion arbeitet read-only; Lernchecks sind grün.
-- Mindestens eine reale Agentantwort mit prüfbarer aktueller Policy-Zitatannotation
-  und getrennter Inventarquelle; fehlende Cloudrechte werden als Blocker notiert.
-- Abgelehnte Freigabe erzeugt keine DB; exakte menschliche Freigabe höchstens eine
-  Zeile pro Vorschlag; Bestand bleibt unverändert.
-- Drei Gegenbeispiele und eine manuelle Bewertung, nicht nur Antwortlänge.
-- Nur eigene Ressourcen entfernt oder eindeutig zum späteren Cleanup dokumentiert.
+- Your own starter function is read-only and its learning checks pass.
+- At least one real response under your own customer identity has a verifiable
+  current-policy citation and a separate inventory source. Missing access stays
+  `BLOCKED`; another person's/admin's pass is not your individual proof.
+- Denied approval creates no DB/write; exact human approval creates at most one
+  row per proposal; inventory stays unchanged.
+- Three counterexamples and a manual score, not just response length.
+- Only owned resources removed, or a named customer cleanup owner/action recorded.
 
-**Bei Cloudausfall:** [ehrlicher Offline-Modus](INSTRUCTOR.md) erlaubt Tools,
-Validierung und Freigabe zu lernen. Er erfüllt ausdrücklich **nicht** den
-Cloud-Agent-/Zitat-Nachweis. Niemand soll einen simulierten Cloud-Erfolg präsentieren.
+**Cloud unavailable:** [honest offline learning](INSTRUCTOR.md) teaches tools,
+validation and approval, but does **not** satisfy cloud-agent/citation acceptance.
+Approved observation of a customer teammate is not an individual cloud pass.
+There is no instructor-hosted fallback.

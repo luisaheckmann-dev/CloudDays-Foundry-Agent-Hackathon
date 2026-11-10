@@ -30,7 +30,7 @@ def definitions():
 class Dispatcher:
     def __init__(self, track="solution"):
         if track not in ("starter", "solution"):
-            raise ValueError("Unbekannter Track.")
+            raise ValueError("Unknown track.")
         self.lookup = importlib.import_module(f"{track}.inventory").get_inventory
         self.pending = {}
         self.events = []
@@ -38,12 +38,12 @@ class Dispatcher:
     def execute(self, name, arguments):
         try:
             if name not in SCHEMAS:
-                raise ValueError("Tool nicht zugelassen.")
+                raise ValueError("Tool not allowed.")
             if len(arguments) > 4096:
-                raise ValueError("Argumente zu groß.")
+                raise ValueError("Arguments too large.")
             args = json.loads(arguments)
             if not isinstance(args, dict) or set(args) != set(SCHEMAS[name]["required"]):
-                raise ValueError("Ungültige Parameter; keine Freigabeparameter erlaubt.")
+                raise ValueError("Invalid parameters; approval parameters are not allowed.")
             if name == "get_inventory":
                 result = self.lookup(**args)
             else:

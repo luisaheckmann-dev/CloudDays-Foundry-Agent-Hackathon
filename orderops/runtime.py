@@ -31,9 +31,9 @@ def run_agent(client, reference, prompt, dispatcher, *, max_rounds=4, max_calls=
               max_output_tokens=1200, on_response=None):
     """Responses continuation, not classic Threads/Runs; injectable for offline tests."""
     if not 1 <= max_rounds <= 4 or not 1 <= max_calls <= 6:
-        raise ValueError("Budgetgrenzen: 1..4 Responses, 1..6 lokale Toolaufrufe.")
+        raise ValueError("Budget limits: 1..4 Responses, 1..6 local tool calls.")
     if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 8000:
-        raise ValueError("Prompt: 1..8000 Zeichen.")
+        raise ValueError("Prompt: 1..8000 characters.")
     start = time.monotonic()
     result = RunResult("")
     request_input = prompt
@@ -51,17 +51,17 @@ def run_agent(client, reference, prompt, dispatcher, *, max_rounds=4, max_calls=
         usage = getattr(response, "usage", None)
         result.tokens += getattr(usage, "total_tokens", 0) or 0
         if getattr(response, "status", None) not in ("completed", None):
-            raise RuntimeError(f"Response nicht abgeschlossen: {response.status}; Budget/Diagnose prüfen.")
+            raise RuntimeError(f"Response not completed: {response.status}; check budget/diagnostics.")
         result.citations.extend(citations_from(response))
         calls = [item for item in response.output if item.type == "function_call"]
         if not calls:
             result.text = response.output_text
             if not result.text.strip():
-                raise RuntimeError("Leere Antwort; nicht als Erfolg werten.")
+                raise RuntimeError("Empty response; do not count as success.")
             result.latency_ms = round((time.monotonic() - start) * 1000)
             return result
         if round_index == max_rounds - 1 or result.calls + len(calls) > max_calls:
-            raise RuntimeError("Toolbudget erschöpft; keine Freigabe/Schreiboperation ausgeführt.")
+            raise RuntimeError("Tool budget exhausted; no approval/write operation executed.")
         request_input = []
         for call in calls:
             result.calls += 1
@@ -69,11 +69,11 @@ def run_agent(client, reference, prompt, dispatcher, *, max_rounds=4, max_calls=
             request_input.append({"type": "function_call_output",
                                   "call_id": call.call_id, "output": output})
         previous = response.id
-    raise RuntimeError("Responsebudget erschöpft.")
+    raise RuntimeError("Response budget exhausted.")
 
 
 def print_result(result):
     print(result.text)
-    print("FILE-SEARCH-ZITATE:", json.dumps(result.citations, ensure_ascii=False))
-    print(f"Diagnose: {len(result.response_ids)} Responses, {result.calls} lokale Tools, "
-          f"{result.tokens} Tokens, {result.latency_ms} ms.")
+    print("FILE-SEARCH CITATIONS:", json.dumps(result.citations, ensure_ascii=False))
+    print(f"Diagnostics: {len(result.response_ids)} Responses, {result.calls} local tools, "
+          f"{result.tokens} tokens, {result.latency_ms} ms.")

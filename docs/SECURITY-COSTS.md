@@ -1,110 +1,162 @@
-# Sicherheit, Datenschutz, Berechtigungen und Kosten
+# Security, privacy, permissions and costs
 
-[Start](../README.md) · [Architektur](ARCHITECTURE.md) · [Cleanup](labs/06-cleanup.md)
+[Home](../README.md) · [Architecture](ARCHITECTURE.md) · [Cleanup](labs/06-cleanup.md)
 
-## Minimaler Zugriff statt pauschal Owner
+## Customer authority and least privilege
 
-Die genauen Berechtigungen hängen von Basic-/Standard-Agent-Setup,
-Ressourcenverknüpfungen und Tenant-Richtlinien ab. Vor dem Workshop prüfen.
-Foundry-Rollen wurden umbenannt; alte Anzeigen können noch „Azure AI …“ lauten.
+All hands-on resources, billing and identities belong to the customer.
+Facilitators guide participants in their own browser/terminal; they do not
+provide accounts, resource access, keys or roles, and need no customer tenant
+invitation. Never collect passwords, MFA codes, tokens or credential exports.
+An authorized customer admin approves privileged operations, IAM, consent,
+network changes and spending. Guidance is not permission to bypass policy.
 
-| Identität / Tätigkeit | Kleinstmöglicher sinnvoller Scope / Rolle |
+Use the official [Foundry RBAC reference](https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry)
+and [environment setup](https://learn.microsoft.com/en-us/azure/foundry/agents/environment-setup).
+Roles may still display their former "Azure AI …" names; verify the definition
+and scope, not a similarly named legacy hub/ML role.
+
+| Identity / operation | Approved authority and narrow scope |
 |---|---|
-| Teilnehmer: Agenten erstellen/aufrufen | **Foundry User** am zugewiesenen Projekt; Modellzugriff auf dessen zugehöriger Foundry-Ressource gemäß Setup |
-| Teilnehmer: Dateien in Projektstorage hochladen | **Storage Blob Data Contributor** am betroffenen Storage, wenn vom verwendeten File-Search-Setup benötigt |
-| Instructor: neue Ressource/Modell/Projekt bereitstellen | dafür nötige Verwaltungsrolle nur auf dedizierter Workshopressource/RG, nicht dauerhaft bei allen Teilnehmenden |
-| Role-Assignment-Verantwortlicher | Owner/User Access Administrator nur für berechtigte Administrierende am notwendigen Scope |
-| Optional IQ: KB/Index erstellen | **Search Service Contributor** auf genau dem Search-Service |
-| Optional IQ: Testdaten indexieren | **Search Index Data Contributor** auf genau dem Search-Service |
-| Optional IQ: lesende Laufzeitidentität | **Search Index Data Reader** auf dem Search-Service |
-| Optional IQ: Search ruft LLM auf | Search-Managed-Identity erhält **Cognitive Services User** auf der Modellressource |
-| Optional IQ: Projekt-MCP-Verbindung erstellen | notwendige **Foundry Project Manager**-Berechtigung auf der Foundry-Ressource; nicht allen Teilnehmern geben |
+| Customer subscription/security/budget owner | Approves active subscription, cost ceiling/process, region, data, network and retention |
+| Customer bootstrap operator: new RG / required provider registration | Relevant subscription actions; a project role or RG-only role cannot register subscription providers |
+| Customer resource/model operator: Foundry resource, project, deployment | Foundry Account Owner or other approved management role at the needed dedicated RG/subscription scope; management alone does not grant project data actions |
+| Customer access administrator | `Microsoft.Authorization/roleAssignments/write` at each target, e.g. approved RBAC Administrator/User Access Administrator/Owner; Foundry roles' conditional assignment powers are limited |
+| Human participant: create/edit/test agents and vector stores | **Foundry User on the intended project**; **Reader on the parent resource** only if navigation needs it |
+| Project runtime | **Project managed identity**, with verified model/resource access; documented baseline: Foundry User on the actual parent Foundry resource for that identity |
+| Human upload path, if required by actual setup | **Storage Blob Data Contributor** only on the actual upload storage scope; not speculative access to unrelated storage |
+| Standard backing resources | Customer admin applies the current Storage/Search/Cosmos roles and connections to the correct managed identities, separately from human roles |
+| Designated quota operator | **Cognitive Services Usages Reader at subscription scope** if quota/eligibility visibility requires it; not routine for all learners |
+| Approved monitoring reader | Narrow monitoring/workspace access, e.g. Log Analytics Reader; protected tables may need additional approval |
+| Optional IQ KB/index management and ingestion | **Search Service Contributor** for KB/index; **Search Index Data Contributor** for synthetic indexing, on the one approved Search service |
+| Optional IQ runtime | **Search Index Data Reader** for the actual project/agent runtime identity on the approved Search service |
+| Optional IQ: Search calls its model | Search managed identity with **Cognitive Services User** on that model resource as required by the Search integration, not a replacement for Foundry project roles |
+| Optional IQ: project RemoteTool connection | Customer-approved connection-management permission, e.g. Foundry Project Manager at the appropriate documented scope; verify the denied operation before any grant |
 
-Keine Rollenzuweisung erfolgt automatisch durch dieses Repo. Rechtefehler
-beheben nicht die Programmcode-Validierung; umgekehrt ersetzt ein sicheres
-lokales Gate keine Azure-RBAC- oder echte Backendautorisierung.
+**Foundry User cannot create resources/projects, deploy models or assign roles.**
+Azure Owner/Contributor alone does not grant Foundry data actions; Contributor
+also cannot assign roles. Foundry Owner combines privileged management/data
+capabilities and is not the default attendee role. Do not distribute blanket
+subscription Owner, Contributor, Global Administrator or resource-wide Foundry
+User as a workshop repair.
 
-## Daten und Identitäten
+## Scoped role assignment procedure
 
-- Nur synthetische Policies/Inventory hochladen. Keine echten Aufträge, PII,
-  Mails, Teams-Chats, Kundendokumente oder Unternehmenssecrets.
-- `.env.example` enthält ausschließlich Platzhalter; `.env`, `.local` und
-  `.venv` sind ignoriert. Keine Access Tokens in Umgebungsdateien nötig.
-- AzureCliCredential verwendet explizit den `az login`-Kontext. Optional pinnen
-  entweder `AZURE_TENANT_ID` oder `AZURE_SUBSCRIPTION_ID` die richtige bereits
-  angemeldete Identität pro Aufruf. Nicht beide zugleich setzen (CLI-Grenze).
-  Die globale CLI-Standardsubscription bleibt unverändert.
-  Kein stiller Managed-Identity-/VS-Code-Fallback.
-- Bestehende Shell-Umgebungsvariablen haben Vorrang vor `.env`. Bei unerwartetem
-  Projekt dies zuerst prüfen und bewusst korrigieren.
-- Lokale Diagnose enthält IDs, Toolnamen, Status, Tokens und Dauer, keine
-  Prompt-/Antwortvolltexte. Evaluationsergebnisse enthalten echte Modelltexte
-  in `.local`, bleiben privat und sollen nach Nutzung entfernt werden.
-- `.gitignore` verhindert nur Git-Commits, **nicht** OneDrive-Synchronisierung.
-  Für private Ausgaben einen genehmigten lokalen Ordner außerhalb synchronisierter
-  Verzeichnisse verwenden; der Workshop verwendet ausschließlich synthetische Daten.
-- Cloudresponses und Uploads können dienstseitig gespeichert werden und sind
-  im Manifest für gezieltes Cleanup erfasst. Dienstaufbewahrung/Auditretention
-  nach Organisationsrichtlinie prüfen, Löschen ist keine Zusage sofortiger
-  Entfernung aus allen Backups/Compliancekopien.
-- Keine externen MCP-Server oder Internettools im Pflichtpfad. Prompt Injection
-  als Datenproblem testen; keine echte Exfiltration zu Demonstrationszwecken.
+1. The authorized **customer admin** signs in to the Azure portal with their
+   own identity, verifies directory/subscription and activates approved privileged
+   authority if required. The participant never uses the admin's session.
+2. Open the **specific target** → **Access control (IAM)** → **Check access**.
+   Review direct/inherited roles and the denied operation.
+3. If approved, use **Add → Add role assignment**, choose the exact role and
+   inspect permissions/scope. For humans choose **User, group, or service principal**
+   and the verified customer-internal principal/group, not a guessed identity.
+4. For project-scoped Foundry User, use **Manage → Project details → Users →
+   Add user** when exposed and correctly project-scoped, or the project IAM
+   route. Verify the final scope. If unavailable, the customer access admin
+   uses an approved administration route or records `BLOCKED`; do not silently
+   widen human access to all projects. Add parent Reader only when needed.
+5. On the Foundry resource's IAM page choose **Managed identity** for runtime
+   access and select the **project's** identity, not merely the parent resource
+   or the human. Verify its Foundry User/model access. A role-capable creator
+   may cause automatic assignments at project creation; **check both human
+   and project identity**, including broad inherited creator rights.
+6. For Standard setup verify the exact Storage/Search/Cosmos dependencies and
+   resource-specific runtime roles using the official setup contract. Human
+   upload access and service runtime access are different. Do not substitute keys.
+7. Review assignments, allow propagation, refresh/re-authenticate as needed.
+   Have each participant verify with **their own sign-in**: portal, CLI,
+   model preflight, upload/indexing and Lab 02 smoke. Admin success is not
+   participant proof.
 
-## Lokale Freigabe: genaue Garantien
+Prefer one person per project. A team may intentionally share a **customer-owned**
+project/model only with explicit customer approval of the common data boundary
+and budget. Agents in one project are not a confidentiality boundary for files,
+conversations, vectors or indexes. Check membership and inherited grants without
+opening another person's data; unexpected access goes to the customer security
+owner. Never test against instructor infrastructure.
 
-`propose_order` validiert und hält einen Vorschlag ausschließlich im Speicher.
-Es ist kein Write-Tool. Ein Flag **und** eine exakte Terminalbestätigung sind
-für die einzige Änderung, einen lokalen SQLite-Simulationsdatensatz, nötig.
-Die Bestätigung muss zu SKU, Menge und Policy-Hash des angezeigten Vorschlags passen.
-Vor Speicherung wird erneut validiert. SQL-Parameter und Primary Key erzwingen
-Duplikatkontrolle; Bestand und andere Geschäftsdaten bleiben read-only.
+## Data and identities
 
-Nicht garantiert: echte ERP-Reservierung, verteilte Mehrnutzerfreigabe,
-Freigabe per M365-Identität, revisionssicheres Audit, echte Lieferfähigkeit.
-Ein lokaler Dateibesitzer kann das Programm ändern. Für Produktion wären
-serverseitige Autorisierung, Transaktionen, Rollen-/Vieraugenmodell und
-immutable Audit erforderlich.
+- Upload only the synthetic policy/inventory material. No real orders, PII,
+  email, chats, customer documents or business secrets.
+- `.env.example` contains placeholders only; `.env`, `.local` and `.venv` are
+  Git-ignored. No keys or access tokens belong in environment files.
+- `AzureCliCredential` deliberately uses explicit `az login`, not a silent
+  managed-identity/VS Code/default-credential fallback. Optional **one** selector,
+  `AZURE_TENANT_ID` **or** `AZURE_SUBSCRIPTION_ID`, selects an already signed-in
+  context per call; Azure CLI permits only one token selector. The application
+  does not change the global CLI default. A matching tenant alone does not
+  prove entitlement to the correct subscription; verify the actual project scope.
+- Shell variables take precedence over `.env`; privately inspect names/values
+  only as necessary to resolve unexpected configuration. Never export credentials.
+- Diagnostics store IDs, tool names, status, token counts and timing, not full
+  prompts/responses. Private evaluation results do contain model text in `.local`.
+- **Git ignore is not OneDrive protection.** Work in a customer-approved local
+  nonsynchronized folder where required. Keep private artifacts out of synced
+  locations and public screenshots. This workshop uses only synthetic data.
+- Cloud responses/files may be retained by the service; the manifest tracks
+  created IDs for scoped cleanup. Customer retention/audit policy still applies;
+  deletion does not promise immediate removal from every compliance copy/backup.
+- No external MCP servers or internet tools in the core. Test injection as
+  synthetic data, never by real secret access or exfiltration.
 
-## Budgetgrenzen und Kostenfallen
+## Local approval: exact guarantees
 
-- Jeder Cloudbefehl verlangt `--allow-cloud`; `--offline` wird nie automatisch
-  als scheinbar erfolgreicher Ersatz verwendet.
-- Pro Anfrage max. **4 Responses**, **6 lokale Function Calls**, je Response
-  max. **3 dienstseitige Tool Calls**, **1200 Outputtokens** angefordert.
-  Eingaben max. 8000 Zeichen; Chat max. 10 unabhängige Anfragen.
-- Preflight: eine kleine Modellprobe bis 512 Outputtokens.
-- Evaluation: standardmäßig 3, explizit höchstens 10 Fälle; keine automatischen
-  LLM-Judge-Aufrufe. Bei zehn Fällen sind theoretisch bis zu 40 Responses und
-  48.000 angeforderte Outputtokens möglich; Input-/Retrieval-/Reasoningtokens
-  und jeweilige Abrechnung separat beachten. Das ist **kein Euro-Festpreis**.
-- SDK-Retries sind deaktiviert; Fehler sichtbar. Manuelle Wiederholung kostet
-  gegebenenfalls erneut. Upload pollt begrenzt und lädt nicht still doppelt hoch.
-- File Search kann neben Modellkosten Speicher-/Toolkosten verursachen.
-  Store läuft nach einem Tag Inaktivität ab; hochgeladene Files trotzdem gezielt löschen.
-- Standard-Setups können bestehende Search-/Storage-Ressourcen verwenden.
-  **Optional neu angelegtes Azure AI Search** hat eigene laufende Kosten,
-  ebenso Hosted-Agent-Compute, Containerregistry und Telemetrie.
-- Kein Fabric und kein M365 Work IQ im Pflichtpfad. Optional können zusätzliche
-  Capacity-, Nutzungs- oder Lizenzkosten entstehen.
+`propose_order` validates and stages only an **in-memory** proposal. It is not
+a write tool. The opt-in `--enable-local-drafts` **and** exact human terminal
+`APPROVE <displayed-id>` are required for the sole write: a local SQLite
+simulation record. Chat "yes", model output and piped approval do not qualify.
+SKU, quantity, policy ID and current policy-file SHA-256 bind the proposal.
+Before saving, the code revalidates the proposal and stock/blocked status.
+Parameterized SQL and a primary key deduplicate; inventory remains read-only.
+Policy translation changes hashes/IDs; do not reuse old IDs or migrate old drafts.
 
-Instructor setzt vorher Kostenbudget und Alerts, Teamaufruflimit und ein
-geeignetes Deployment fest. Azure-Budgetalarme sind in der Regel
-**Benachrichtigungen, kein harter Ausgabenstopp**. Aktuelle Preise/Region/Modell
-vor Ort prüfen; keine pauschale Kostenfreiheit versprechen.
+Not guaranteed: ERP reservation, real orders, distributed approval, M365 identity
+approval, immutable audit or actual delivery. A local file owner can edit the
+program. Production requires server-side authorization, transactions, role/
+dual-control design and immutable audit. Azure customer access and this local
+prototype approval gate are different security boundaries.
 
-Für Gruppen Quota vorab dimensionieren: Teams mal gleichzeitig gestartete
-Anfragen mal gemessene Input-/Outputtokens pro Minute. Registrierung, Evaluation
-und zehn Teams mit parallelen Requests dürfen nicht erstmals im Workshop auf
-ein knappes Demo-Deployment treffen. Als Startplan höchstens zwei Teams je
-Startwelle aufrufen lassen, 429 sichtbar behandeln und den genauen Quota-Wert
-mit der Lehrperson vorab proben.
+## Budget limits and cost traps
 
-## Ressourcenbezogenes Cleanup
+- Every cloud command requires `--allow-cloud`. Offline is never an automatic
+  replacement that masquerades as cloud success.
+- Per request: max **4 Responses**, **6 local function calls**, **3 service-side
+  tool calls per Response**, **1200 requested output tokens**. Input max 8000
+  characters; chat max 10 independent requests.
+- Cloud preflight performs a real model probe with up to 512 output tokens.
+- Evaluation defaults to 3 cases, explicitly max 10, with no automatic LLM judge.
+  Ten cases could use up to 40 Responses and 48,000 requested output tokens;
+  input/retrieval/reasoning tokens and actual billing are additional. This is
+  **not a fixed currency price**.
+- SDK retries are disabled. Visible failures and manual reruns may still cost.
+  Upload polling is bounded; existing stores block accidental duplicate upload.
+- File Search may charge for storage/tools as well as model use. Store expiry
+  after one day of inactivity does not clean up uploaded files.
+- Standard backing Search/Storage/Cosmos, optional Search KBs, hosted compute,
+  container registries and monitoring have separate costs.
+- Fabric and M365 Work IQ are not core requirements; optional integrations may
+  require additional capacity, usage billing and licenses.
 
-1. SDK-Manifest prüfen und über `cleanup` gezielt Versionen, Responses, Stores,
-   Files löschen.
-2. Den separaten eigenen Portalagenten manuell entfernen.
-3. Optionale KB, Knowledge Source, Index, Connection, Toolbox, Hosted-Agent-
-   Deployment nur nach eigener Ownershipliste und Freigabe entfernen.
-4. Shared Modell/Foundry/Search/Storage/RG nicht pauschal löschen.
-5. Noch kostenpflichtige dedizierte Infrastruktur mit Resource Owner nachbereinigen.
+The **customer budget/resource owner** approves budget alerts, allowed deployment,
+team call limits and a stop-spending contact. Facilitators help estimate and
+coordinate requests; they neither pay nor control customer billing. Azure
+budget alerts are **notifications, not a hard cap**. Check current prices,
+region and deployment type; never promise universal free usage.
+
+Size customer quota before the event: concurrent teams × measured input/output
+tokens per minute. Do not first test registration/evaluation and ten parallel
+teams on a small deployment on the day. A starting coordination plan is at most
+two teams per request wave; the designated customer operator verifies actual
+quota and handles 429, without automatic retries or instructor fallback.
+
+## Resource-scoped cleanup
+
+1. Inspect the SDK manifest, then `cleanup` only its versions, Responses, stores
+   and files. Retain the manifest on partial failure.
+2. Manually remove only the separately created personal portal agent.
+3. Optional KB, source, index, connection, toolbox or hosted compute requires
+   a separate customer ownership list and approval.
+4. Never broadly delete shared model/Foundry/Search/Storage/resource groups.
+5. Customer owners approve removal of dedicated remaining infrastructure and
+   check billing/retention. Track any blocker with a customer owner and action.

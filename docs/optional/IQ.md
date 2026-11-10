@@ -1,248 +1,246 @@
-# Optionaler Stretch — echtes Foundry IQ, Fabric IQ und Work IQ
+# Optional stretch — real Foundry IQ, Fabric IQ and Work IQ
 
-[Start](../../README.md) · [Architektur](../ARCHITECTURE.md) · [Quellen](../../SOURCES.md)
+[Home](../../README.md) · [Architecture](../ARCHITECTURE.md) · [Sources](../../SOURCES.md)
 
-**Nicht Teil der Pflichtvoraussetzungen.** Vorbereitet als Instructor-Demo oder
-nach abgeschlossenem Core, nicht als zusätzlicher Block in die 210 Minuten
-hineinrechnen. Ohne diese Zusatzressourcen funktioniert der gesamte Pflichtpfad.
-Die lokalen Dateien sind weder Fabric IQ noch Work IQ noch Foundry IQ.
+**Not a core prerequisite.** Use a separately approved customer-owned test setup
+for an optional demonstration or after core completion, not an additional block
+inside 210 minutes. The mandatory path works without these resources/licenses.
+Local files are not Fabric IQ, Work IQ or Foundry IQ. No required instructor
+endpoint, project, account, model, Search service or other infrastructure.
+Customer admins approve privileged provisioning, IAM, consent and billing;
+facilitators guide without customer tenant access.
 
-## 1. Was wäre ein echter Integrationsnachweis?
+The procedures below are instructions only, **not executed by this update**.
+Actual customer IQ acceptance remains **NOT_RUN** until tested with the intended
+authorized identities. Missing approvals/resources are `BLOCKED`, not a cue to
+rename a fixture or to use instructor hosting.
 
-| Baustein | Mindestnachweis | Reicht ausdrücklich nicht |
+## 1. What proves a real integration?
+
+| Component | Minimum evidence | Explicitly insufficient |
 |---|---|---|
-| Foundry IQ | existierende Azure-AI-Search-Knowledge-Base, Knowledge Source, tatsächlicher Retrieval-/MCP-Call, Quellenbelege | FileSearchTool umbenennen |
-| Fabric IQ | tatsächliches Fabric-Item / semantischer Kontext und autorisierte Abfrage im Dienst, Quelle/Metrik nachvollziehbar | JSON aus `data` vorlesen |
-| Work IQ | autorisierte echte Work-IQ-Abfrage gegen freigegebenen M365-Arbeitskontext mit Quellen | erfundene Mail-/Teamfixture |
+| Foundry IQ | Actual Azure AI Search KB, knowledge source, real retrieval/MCP call and sources | Renaming FileSearchTool |
+| Fabric IQ | Actual Fabric item/semantic context and authorized service query with traceable source/metric | Reading JSON from `data` |
+| Work IQ | Authorized real Work IQ query against approved M365 context with sources | Invented email/Teams fixture |
 
-Die genauen GA-/Previewgrenzen hängen von API-Version und Quelle ab.
-Die aktuelle Search-Dokumentation unterscheidet **2026-04-01** für GA/minimale
-extraktive Retrievalfunktionen und **2026-08-01-preview** für entsprechende
-erweiterte/LLM-basierte Funktionen. Die hier referenzierten Portal-/Samplepfade
-können Preview verwenden; keine pauschale GA- oder Produktionszusage.
+GA/preview boundaries depend on the exact API/source. The referenced Search
+documentation distinguishes **2026-04-01** for GA/minimal extractive retrieval
+and **2026-08-01-preview** for relevant advanced/LLM-based features. Portal/sample
+paths may use preview; no blanket GA or production-readiness guarantee.
 
-## 2. Foundry IQ — separater Voraussetzungencheck
+## 2. Foundry IQ — separate prerequisite check
 
-Vorher durch Instructor vollständig vorbereiten:
+The **customer's authorized operator** prepares:
 
-1. Eigenen oder ausdrücklich freigegebenen Azure-AI-Search-Service in unterstützter
-   Region; passender Tarif für Managed Identity, RBAC aktiviert.
-2. Synthetischen Index und Knowledge Source, daraus eine Knowledge Base.
-   Eine Sammlung von Files/Vector Stores ist **keine** Search Knowledge Base.
-3. Optional für LLM-Planung/Synthese: unterstütztes Azure-OpenAI-Deployment;
-   Search-System-Managed-Identity mit **Cognitive Services User** auf der
-   Modellressource. Modell/Region/Versionskompatibilität gesondert prüfen.
-4. Provisionierende Identität: **Search Service Contributor** für KB/Index
-   und **Search Index Data Contributor** für Daten.
-5. Read-only Laufzeitidentität: **Search Index Data Reader** auf Search.
-6. Neues Foundry-Projekt plus Rechte für RemoteTool-Verbindung.
-7. Geprüfte Kosten und Cleanup-Ownershipliste.
+1. A dedicated or explicitly approved customer Azure AI Search service in an
+   eligible region/tier supporting managed identity, with approved RBAC.
+2. Synthetic index, knowledge source and KB. Files/vector stores are **not**
+   a Search knowledge base.
+3. Optional LLM planning/synthesis: compatible Azure OpenAI deployment; Search
+   system-assigned managed identity with **Cognitive Services User** on that
+   model resource. Verify version/region compatibility separately.
+4. Provisioning principal: **Search Service Contributor** for KB/index,
+   **Search Index Data Contributor** for ingestion on that Search service.
+5. Read-only runtime identity: **Search Index Data Reader** on Search.
+6. Foundry (new) project and approved RemoteTool connection-management access.
+7. Customer-approved cost estimate, data/retention policy and separate cleanup
+   ownership list. No new terms/consent are accepted on a customer's behalf.
 
-Bei ACL-geschützten oder Remote-SharePoint-Quellen genügt eine globale
-Serviceidentität **nicht** als Beleg für durchgängige Nutzerberechtigungen:
-Quellberechtigungen, ACL-Metadaten und Nutzerkontextweitergabe gemäß
-[offizieller Verbindungsanleitung](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/foundry-iq-connect)
-testen. Ein für alle offener synthetischer Index beweist keine nutzerspezifische
-Security Trimming.
+For ACL-protected or remote SharePoint sources, a global service identity
+does **not** prove end-to-end user authorization. Verify source permissions,
+ACL metadata and user-context propagation using the
+[official connection guide](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/foundry-iq-connect).
+An open synthetic index does not prove user-specific security trimming.
 
-## 3. Portalpfad mit vorbereiteter Knowledge Base
+## 3. Portal path with a prepared knowledge base
 
-1. Öffne im richtigen **New Foundry**-Projekt **Build**.
-2. Öffne **Knowledge**.
-3. Verbinde den von der Lehrperson freigegebenen Search-Service oder wähle
-   die dort vorbereitete Knowledge Base.
-4. Wenn du selbst berechtigt anlegen darfst: wähle **Create knowledge base**,
-   füge eine vorhandene Knowledge Source bzw. einen vorbereiteten Search-Index
-   hinzu und prüfe Eigenschaften/Gültigkeit nach der
-   [offiziellen KB-Anleitung](https://learn.microsoft.com/en-us/azure/search/agentic-retrieval-how-to-create-knowledge-base).
-   Bezeichnungen und Source-Dialoge hängen vom aktuellen Rollout ab.
-5. Teste die Knowledge Base mit einer Frage, die nur der synthetische Index
-   beantworten kann. Prüfe Retrievalantwort und Source References.
-6. Öffne **Build → Agents** und einen **separaten** Stretch-Agenten, nicht den
-   Pflichtagenten mit dessen manifestiertem File-Search-Vertrag.
-7. Verbinde die Knowledge Base in der angebotenen Knowledge-/Tool-Konfiguration.
-8. Frage nach einem konkreten Richtlinienfakt und prüfe den tatsächlichen
-   Retrievalpfad sowie Quellen. Keine zusätzlichen Schreibtools hinzufügen.
+1. In your approved **New Foundry** customer project open **Build → Knowledge**.
+2. Connect the customer-approved Search service or select its prepared KB.
+3. Only if authorized to create: **Create knowledge base**, add an existing
+   knowledge source/prepared index, then inspect properties/validity using the
+   [official KB guide](https://learn.microsoft.com/en-us/azure/search/agentic-retrieval-how-to-create-knowledge-base).
+   Labels/source dialogs vary by rollout.
+4. Test with a question only the synthetic index can answer. Inspect retrieval
+   output and source references.
+5. In **Build → Agents**, choose a **separate stretch agent**, not the core
+   agent with its manifested File Search contract.
+6. Connect the KB through the offered knowledge/tool configuration.
+7. Ask a policy fact and verify the actual retrieval path and source.
+   Add no write tools.
 
-Für den am 04.11.2026 sichtbaren deutschen Portalpfad:
+English equivalents of the portal flow originally inspected on **2026-11-04**:
 
-1. **Erstellen → Wissen → Neue Ressource erstellen** zeigt mögliche
-   Kapazitätsgrenzen. Ist eine Region ausgelastet, vor dem Erstellen eine
-   verfügbare, organisatorisch zulässige Region wählen.
-2. Im Azure-Portal den Tarif ausdrücklich kontrollieren. **Basic mit einer
-   Replik und einer Partition** ist ein kleiner Managed-Identity-Demoaufbau;
-   nicht versehentlich den Standardtarif oder mehrere Sucheineinheiten verwenden.
-3. In Foundry die Search-Verbindung mit **Verwaltete Projektidentität** anlegen.
-   Auf Search muss RBAC erlaubt sein (**Keys → API Access control → Both**
-   oder **Role-based access control**, abhängig vom genehmigten Authentifizierungsplan).
-4. **Erstellen einer Wissensdatenbank → Dateien hochladen** öffnet nach der
-   Dateiauswahl **Wissensquelle erstellen**. Bei Embeddings gegebenenfalls
-   **Grant access** nutzen: die **Search-Identität** benötigt Modellzugriff auf
-   der richtigen Foundry-Ressource. Warten, bis die Dateien verarbeitet sind;
-   „Quelle aktiv, 0 Dateien“ genügt nicht.
-5. Für echte LLM-Planung ein unterstütztes Chatdeployment und
-   **Abrufbegründungsaufwand: Niedrig** wählen. **Minimal** hat keine
-   LLM-Abfrageplanung. **Extrahierte Daten** lässt den Agenten auf Quellen aufbauen.
-6. Wissensdatenbank speichern, dann **In einem Agent verwenden** und den
-   separaten IQ-Agenten auswählen. Neue gespeicherte Agentversion kontrollieren.
-7. Auf **Search → Access control (IAM)** die **Foundry-Projektidentität**
-   als **Search Index Data Reader** auf genau diesem Search-Service zuweisen.
-   Das ist eine andere Richtung als Search → Modellzugriff.
-   Keine Owner-/Contributor-Rolle als 403-Reparatur vergeben.
-8. Nach RBAC-Propagation im neuen Chat erneut fragen. In
-   **Agent → Ablaufverfolgungen → abgeschlossene Trace-ID** den
-   **execute_tool … knowledge_base_retrieve**-Span öffnen und Ein-/Ausgabe prüfen.
+1. **Build → Knowledge → Create new resource** may show capacity limits.
+   Select an available **customer-approved** region before creation.
+2. In Azure inspect Search pricing explicitly. **Basic, one replica and one
+   partition** is a small managed-identity demo configuration if supported;
+   never accidentally accept a Standard tier or extra search units. This
+   **Search pricing tier** is not the Agent Service Basic/Standard setup mode.
+3. Create the Foundry Search connection using **Project managed identity**.
+   Search must allow the approved RBAC design: **Keys → API access control →
+   Both** or **Role-based access control**, as approved by the customer.
+   Do not weaken authentication to work around an error.
+4. **Create knowledge base → Upload files** opens **Create knowledge source**
+   after file selection. If embeddings require **Grant access**, the authorized
+   customer admin verifies the **Search identity's** model access on the correct
+   resource. Wait for processing; "active source, 0 files" is insufficient.
+5. For actual LLM planning choose a supported chat deployment and **Retrieval
+   reasoning effort: Low**. **Minimal** has no LLM query planning. **Extracted
+   data** lets the agent reason from returned sources.
+6. Save KB → **Use in an agent** → select the separate IQ agent. Verify the new
+   saved agent version.
+7. On **Search → Access control (IAM)** the customer admin assigns **Search
+   Index Data Reader** to the **Foundry project identity** on that service.
+   This is a different direction from Search → model access. Do not repair
+   a 403 with generic Owner/Contributor.
+8. After propagation ask in a new chat. Open **Agent → Traces → completed trace
+   ID → execute_tool … knowledge_base_retrieve** and inspect input/output.
 
-**Erwartung:** Anfrage erreicht die Knowledge Base und liefert deren Quellen.
-Je nach gewähltem Retrievalmodus erfolgt Planung/Synthese; ein minimaler
-extraktiver Modus behauptet keine LLM-basierte Suchplanung.
+**Expected:** actual KB request and returned sources. Planning/synthesis depends
+on mode; minimal extractive retrieval must not be called LLM search planning.
 
-**Recovery:** 403 → zugewiesene Laufzeitidentität und Search-Rolle prüfen;
-leere Ergebnisse → Index, Source, Scope und Frage prüfen; keine verfügbare
-Knowledge-Ansicht → aktuellen Rollout und offizielle Anleitung nutzen,
-nicht File Search als Ersatz-IQ ausgeben.
+**Recovery:** 403 → actual runtime identity/scope; empty results → index,
+source, scope and question. Missing Knowledge view → official current route,
+not relabeled File Search. Customer admin success is not participant access proof.
 
-## 4. SDK-/MCP-Pfad: genauen offiziellen Vertrag verwenden
+## 4. SDK/MCP path: use the exact official contract
 
-Die [offizielle Anleitung „Connect Agents to Foundry IQ Knowledge Bases“](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/foundry-iq-connect)
-zeigt den **Prompt-Agent-Pfad**:
+The [official connection guide](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/foundry-iq-connect)
+describes the **prompt-agent** route:
 
-1. Vorhandene KB besitzt einen Endpoint nach dem Muster
+1. Existing KB exposes an endpoint like
    `https://<search>.search.windows.net/knowledgebases/<kb>/mcp?api-version=2026-08-01-preview`.
-2. Eine **RemoteTool-Projektverbindung** authentifiziert gegenüber diesem
-   Endpoint, im dokumentierten Beispiel per **ProjectManagedIdentity**.
-3. Der Prompt Agent erhält ein **MCPTool** mit passender Projektverbindung.
-4. Exponiert wird gezielt **knowledge_base_retrieve**; keine fremden MCP-Tools
-   pauschal freigeben.
-5. Antwortquellen sowie Identitäts-/Berechtigungsfluss separat prüfen.
+2. A **RemoteTool project connection** authenticates to it; the documented
+   example uses **ProjectManagedIdentity**.
+3. The prompt agent gets an **MCPTool** using that project connection.
+4. Expose only **knowledge_base_retrieve**, not every external MCP tool.
+5. Verify answer sources and the identity/permission flow separately.
 
-Dieses Repo registriert diese Verbindung **nicht automatisch** und enthält
-keinen scheinbaren KB-Client, der intern die lokale Fixture liest.
-Folge bei tatsächlicher Einrichtung dem vollständigen offiziellen Beispiel;
-Preview-ARM-Verbindungsvertrag und Projekt-ID nicht aus dem Core-Manifest erraten.
+This repository does **not** register that connection automatically and has no
+fake KB client reading local fixtures. For real setup follow the complete
+official example; do not infer preview ARM connection contracts/project IDs
+from the core manifest.
 
-## 5. Optional: ausführbares Python als Hosted Agent — anderer Pfad
+## 5. Optional executable Python as a hosted agent — different path
 
-**Exakte Referenz:** [Foundry-Samples / Responses / 17-foundry-iq-toolbox](https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents/agent-framework/responses/17-foundry-iq-toolbox).
-Das Beispiel enthält `provision_kb.py`, `toolbox.yaml`, Hookskripte, Manifest
-und einen echten Responses-Host.
+**Exact reference:** [Foundry sample / Responses / 17-foundry-iq-toolbox](https://github.com/microsoft-foundry/foundry-samples/tree/main/samples/python/hosted-agents/agent-framework/responses/17-foundry-iq-toolbox).
+It includes `provision_kb.py`, `toolbox.yaml`, hooks, a manifest and a real
+Responses host.
 
-Am **04.11.2026** geprüfter Quellstand:
+Source contract originally inspected on **2026-11-04**:
 
-- `FoundryChatClient` kommt aus `agent_framework.foundry`.
-- `FoundryToolbox` und `ResponsesHostServer` kommen in dessen `main.py` aus
-  **`agent_framework_foundry_hosting`**. Nicht blind ältere Importzeilen kopieren.
-- Sample-Pythonvoraussetzung laut `pyproject.toml`: **≥3.13**.
-- Modellbeispiel `gpt-5.4-mini` bewusst durch ein tatsächlich verfügbares
-  unterstütztes Deployment ersetzen, nicht dessen Verfügbarkeit versprechen.
+- `FoundryChatClient` comes from `agent_framework.foundry`.
+- `FoundryToolbox` and `ResponsesHostServer` in its `main.py` come from
+  **`agent_framework_foundry_hosting`**; do not blindly copy older imports.
+- Sample Python requirement in `pyproject.toml`: **≥3.13**.
+- Replace sample model `gpt-5.4-mini` deliberately with an actually available
+  compatible customer deployment; no universal availability claim.
 
-### Isolierter Instructor-Aufbau
+### Isolated customer-approved setup
 
-Diese Befehle sind **Anleitungen**, bei der Repositoryerstellung nicht ausgeführt.
-Nur nach Genehmigung in einer separaten ignorierten Arbeitskopie verwenden:
+These are **instructions**, not executed validation. Only an authorized
+customer operator uses a separate ignored copy after approval. Keep it in an
+approved nonsynchronized working folder; Git ignore alone does not stop OneDrive.
 
 ```powershell
-# Aus dem Workshop-Repository, Core-.venv bleibt unberührt.
+# From the workshop repo; leave the core .venv unchanged.
 New-Item -ItemType Directory -Path .local\iq-reference -Force | Out-Null
 Set-Location .local\iq-reference
 azd version
 azd ext install microsoft.foundry
-az login
+az login --tenant "YOUR-CUSTOMER-TENANT-ID"
 azd ai agent init -m "https://github.com/microsoft-foundry/foundry-samples/blob/main/samples/python/hosted-agents/agent-framework/responses/17-foundry-iq-toolbox/azure.yaml"
 ```
 
-1. Im Init-Dialog eigenes freigegebenes Foundry-Projekt und tatsächliches Modell
-   wählen. Keine unbekannte Subscription oder automatische neue Infrastruktur bestätigen.
-2. Vor Provisioning die erzeugten Dateien und die aktuelle Sample-README lesen.
-   Der top-level `postprovision`-Hook muss ausdrücklich registriert sein und auf
-   den tatsächlich erzeugten `src\<agent-name>\hooks\postprovision.ps1` zeigen.
-   Service-scoped Hooks sind dafür nicht gleichwertig.
-3. Den vorhandenen genehmigten Search-Service konfigurieren:
+1. In initialization choose your approved customer subscription/project and
+   actual model. Verify CLI/directory context as in Lab 00. Do not accept an
+   unknown subscription or unreviewed automatic infrastructure.
+2. Read generated files/current sample README **before provisioning**. The
+   top-level `postprovision` hook must be explicitly registered and point at
+   actual `src\<agent-name>\hooks\postprovision.ps1`. Service-scoped hooks are
+   not equivalent.
+3. Configure the approved existing customer Search service:
 
    ```powershell
-   azd env set AZURE_SEARCH_ENDPOINT "https://EUER-SEARCH-SERVICE.search.windows.net"
+   azd env set AZURE_SEARCH_ENDPOINT "https://YOUR-SEARCH-SERVICE.search.windows.net"
    ```
 
-4. Erst nach Ressourcen-/Kostenprüfung `azd provision` gemäß Sample ausführen.
-   Der Hook erstellt Index/KB, RemoteTool-Verbindung und Toolbox.
-5. `TOOLBOX_ENDPOINT` zeigt anschließend auf den Foundry-Toolbox-MCP-Endpoint;
-   die Toolbox vermittelt zur echten Search-KB.
-6. Mit dem im Sample dokumentierten lokalen Hostingablauf starten und in einem
-   zweiten Terminal testen:
+4. Only after customer resource/cost/permission review, run `azd provision`
+   according to the sample. Its hook creates index/KB, RemoteTool connection
+   and toolbox; inspect exactly which resources/roles it proposes.
+5. `TOOLBOX_ENDPOINT` then points to a Foundry toolbox MCP endpoint, which
+   brokers to the actual Search KB.
+6. Follow the sample's local hosting instructions and test in another terminal:
 
    ```powershell
    azd ai agent invoke --local "What can you tell me about the Earth at night?"
    ```
 
-7. Nur bei explizit gewolltem Cloudhosting dem offiziellen
-   [Hosted-Agent-Deploymentguide](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/deploy-hosted-agent)
-   folgen. Für die neu erzeugte Agentidentität die nötige Search-Reader-Rolle
-   **nach** deren Erzeugung am korrekten Scope prüfen.
+7. Only for explicitly approved cloud hosting follow the
+   [hosted-agent deployment guide](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/deploy-hosted-agent).
+   Verify Search Reader access for the **new agent identity after creation**.
 
-**Unterschied:** Beim Hosted Agent wird ausführbarer Pythoncode tatsächlich als
-Dienst bereitgestellt. Unser Pflicht-`register` stellt nur einen Prompt Agent
-mit Toolmetadaten bereit und ist kein Hosted-Agent-Deployment.
+**Difference:** hosted agents deploy executable Python as a service. Core
+`register` deploys a prompt agent/tool metadata, not hosted Python.
 
-**Cleanup:** Sample-Ressourcen stehen nicht im Core-Manifest. Eigene KB,
-Knowledge Source, Index, Connection, Toolbox, Agentversion/Compute und optional
-neu erzeugte Infrastruktur anhand separater Ownershipliste aufräumen. Kein
-unbesehenes `azd down` auf geteilten Projekten.
+**Cleanup:** sample resources are not in the core manifest. Track owned KB,
+source, index, connection, toolbox, agent versions/compute and any created
+infrastructure separately with the customer owner. No unreviewed `azd down`
+on shared projects.
 
-## 6. Fabric IQ — nur mit vorbereitetem Geschäfts-/Semantikkontext
+## 6. Fabric IQ — only with prepared business/semantic context
 
-**Separate Voraussetzungen:** passender Fabric-Workspace und Capacity/Lizenz
-für die konkret eingesetzten Features, freigegebene Items, Rollen und
-Tenantsettings. Teilnehmer benötigen dies **nicht** für den Core.
-Referenzen: [Fabric IQ](https://learn.microsoft.com/en-us/fabric/iq/overview) und
+**Separate prerequisites:** customer-approved Fabric workspace and the capacity/
+license for the actual feature, approved items, roles and tenant settings.
+None is required for core. References: [Fabric IQ](https://learn.microsoft.com/en-us/fabric/iq/overview),
 [Microsoft IQ Samples](https://github.com/microsoft/iq-samples).
 
-Instructor-Demo:
+Optional demonstration in an approved customer-owned test scope:
 
-1. Einen ausschließlich synthetischen Geschäftsbestand in einem echten Fabric-
-   Item vorbereiten und seine fachliche Semantik zeigen, z. B. „verfügbar“
-   im Unterschied zu „physisch“ und „reserviert“.
-2. Vorhandenes semantisches Modell/Ontology-/Data-Agent-Szenario mit richtiger
-   Item- und Workspaceberechtigung wählen; Previewstatus jeweils offenlegen.
-3. Einen tatsächlichen Dienstaufruf durchführen und Antwort/Abfrage gegen
-   die Quelldaten prüfen. Ein gesonderter read-only Adapter kann diesen Kontext
-   später in Foundry integrieren, ist **nicht im Core enthalten**.
-4. Identität, Datenfrische und definierte Kennzahl benennen.
+1. Prepare purely synthetic business data in a real Fabric item. Show the
+   semantics of "available" versus "physical" and "reserved".
+2. Select an actual semantic model/ontology/data-agent scenario with correct
+   item/workspace authorization; disclose its preview status.
+3. Execute an authorized service query and check response/query against source.
+   A separate read-only adapter could later integrate this context into Foundry;
+   it is **not included in core**.
+4. Name identity, data freshness and metric definition.
 
-**Erwartung:** semantischer Geschäftskontext aus Fabric ist nachgewiesen.
-Nur Daten aus Fabric zu exportieren und später lokal zu lesen ist höchstens
-ein Exportfixture, keine aktuelle Fabric-IQ-Liveintegration.
+**Expected:** evidenced Fabric business semantics. Exporting Fabric data and
+reading it locally is only an export fixture, not current live Fabric IQ.
 
-**Fallback:** `data\inventory.json` mit Kennzeichnung „lokaler synthetischer
-Snapshot“ verwenden. Gleiches Geschäftsproblem, **kein** Fabric-IQ-Nachweis.
+**Offline alternative:** `data\inventory.json` labeled "local synthetic snapshot".
+Same business question, **no** Fabric IQ acceptance. Do not require an instructor
+Fabric workspace/account.
 
-## 7. Work IQ — nur genehmigter M365-Arbeitskontext
+## 7. Work IQ — only approved M365 work context
 
-Aktuelle Referenz: [Microsoft Work IQ CLI](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/cli).
-Die am 04.11.2026 geprüfte Seite nennt Node.js, administrativen Consent, einen
-Copilot-Studio-Nutzungsabrechnungsplan und die Nutzerzuordnung dazu. Lizenz-,
-Pay-as-you-go- und Tenantvoraussetzungen **für den konkreten Zugang** prüfen;
-„jeder braucht M365 Copilot“ wäre ebenso pauschal falsch wie „immer kostenlos“.
+Reference: [Microsoft Work IQ CLI](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/cli).
+The page originally inspected on 2026-11-04 lists Node.js, admin consent,
+a Copilot Studio usage-billing plan and user assignment. Verify current
+license/pay-as-you-go/tenant requirements **for the actual route**. Neither
+"everyone needs M365 Copilot" nor "always free" is a safe blanket claim.
 
-Instructor-Demo ausschließlich mit freigegebenem Demokonto/-kontext:
+Optional demonstration only with approved customer identities/context:
 
-1. Aktuellen unterstützten Work-IQ-CLI-Build nach Organisationsrichtlinie
-   auswählen und isoliert vorbereiten, nicht global ungefragt installieren.
-2. Nutzungsbedingungen selbst prüfen/akzeptieren und nur genehmigten
-   Tenant-Consent verwenden. Kein Consent wird durch dieses Repo erteilt.
-3. Eine bewusst synthetische, freigegebene Demoarbeitsquelle nutzen, z. B.
-   Projektbesprechung zur fachlichen Bestellpriorität.
-4. Einen tatsächlichen `workiq ask -q "..."`- oder genehmigten MCP-Aufruf
-   ausführen; Quelle und berechtigten Kontext nachvollziehen.
-5. Ergebnis zunächst als **separate Work-IQ-Demo** bezeichnen. Ohne zusätzliche
-   unterstützte Verbindung ist es nicht automatisch Tool des Core-Foundry-Agenten.
-6. Keine echten Mails/Personen/Ergebnisse in dieses Repository oder öffentliche
-   Screenshots übernehmen; keine Work-IQ-Schreibtools ungeprüft aktivieren.
+1. The customer operator selects a supported Work IQ CLI build and prepares
+   it in isolation per policy, not an unapproved global installation.
+2. Customer authorized owners handle applicable terms, consent and billing
+   outside the core exercise. This repo grants no consent and does not ask
+   facilitators to accept terms on the customer's behalf.
+3. Use an approved synthetic test source, e.g. a meeting about order priority.
+4. Execute an actual authorized `workiq ask -q "..."` or approved MCP request;
+   verify sources and the user's authorized context.
+5. Call it a **separate Work IQ demonstration**. It is not automatically a
+   core-agent tool without another supported connection.
+6. Keep real emails/people/results out of the repo/public screenshots; do not
+   enable unchecked Work IQ write tools.
 
-**Fallback:** fachliche Rückfrage „Welcher Kontext fehlt uns?“ besprechen.
-Keine erfundene Mail als echte Work-IQ-Ausgabe präsentieren.
+**Offline alternative:** discuss "Which work context is missing?" Never present
+invented email as real Work IQ output or require an instructor M365 account.
 
-## 8. Abschließende Beweisfrage
+## 8. Final evidence question
 
-„Welcher Dienst wurde mit welcher Identität wirklich aufgerufen, was war dessen
-Quelle, und welche Integration ist nur geplant?“ Wenn diese Frage nicht
-beantwortet werden kann, bleibt der entsprechende IQ-Teil **nicht verifiziert**.
+"Which service was actually called, with which identity and source, and which
+integration is only planned?" If unanswered, that IQ integration remains
+**unverified / NOT_RUN**, regardless of offline test success.

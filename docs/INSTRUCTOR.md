@@ -1,21 +1,31 @@
-# Instructor- und Facilitator-Runbook
+# Instructor and facilitator runbook
 
-[Start](../README.md) · [Agenda](AGENDA.md) · [Troubleshooting](TROUBLESHOOTING.md)
+[Home](../README.md) · [Agenda](AGENDA.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
-Dieses Runbook ist ausschließlich für den öffentlichen synthetischen
-OrderOps-Fall geschrieben. Es enthält keine Tenant-IDs, privaten Demozugänge,
-realen Nutzer, internen Daten oder echten UI-Screenshots.
+This runbook uses only the public synthetic OrderOps scenario. No private
+tenant IDs, real users, demo credentials, internal documents or UI screenshots.
+Participants use **their own customer subscriptions and Entra identities**.
+Facilitators guide, not host resources or grant customer authority.
 
-## 1. Vorbereitung vor dem Veranstaltungstag
+## 1. Prepare before the workshop
 
-1. Teilnehmendenanzahl, Teams und erlaubtes Budget festlegen.
-2. Foundry-(new)-Projekt(e), Region, Quota und ein geeignetes Responses-/Function-/
-   File-Search-Modell vorbereiten. Shared Modell ist möglich, Agentnamen müssen
-   eindeutig sein. Bei gemeinsamem Projekt sehen Berechtigungen ggf. mehr als
-   Teamdaten: deshalb nur synthetische Workshopdaten.
-3. [Minimale Rollen](SECURITY-COSTS.md), Storagezugriff und Netzwerk prüfen.
-   Quota-/RBAC-Freigaben nicht in den 15-Minuten-Readinessblock verlagern.
-4. Pro Teilnehmer den SDK-Pfad mit dessen tatsächlicher Identität proben:
+1. Agree customer team count, budget/stop-spending contact, allowed data/regions,
+   network, retention and cleanup ownership. Each participant brings their own
+   sign-in/MFA and approved active subscription; keep a customer admin reachable.
+2. Share the self-contained [customer bootstrap](labs/00-readiness.md#customer-bootstrap-before-the-workshop)
+   and [role procedure](SECURITY-COSTS.md#scoped-role-assignment-procedure).
+   Help customer operators plan a new dedicated RG, Foundry (new), project and
+   actual compatible Responses/function/File-Search deployment. Customer admins
+   perform approved creation/IAM/consent/billing; facilitators need no tenant invite.
+3. Prefer individual projects. A customer team may share its own project/model
+   only with explicit approval of the common data boundary and inherited access.
+   Never invite customers to instructor infrastructure or share accounts/passwords.
+4. Complete setup before the day where possible. Allow **60–90 minutes or more
+   plus approval lead time**; schedule a clinic/follow-up for unresolved setup.
+   Do not shift quota, enterprise Standard networking or subscription approval
+   into the 15-minute checkpoint.
+5. Have each participant rehearse the SDK path **under their own identity**,
+   after customer permission and cost approval:
 
    ```powershell
    .\scripts\bootstrap.ps1
@@ -25,133 +35,152 @@ realen Nutzer, internen Daten oder echten UI-Screenshots.
    .\.venv\Scripts\python.exe -m orderops smoke --allow-cloud --track solution
    ```
 
-5. Mindestens einen echten Zitatziel-, Konflikt- und Inventarfall lesen. Ein
-   Smoke-Pass allein ist keine Qualitätsabnahme.
-6. Portalagent mit anderem Namen für Lab 01 vorbereiten; alte Versionen/Files
-   nach Proben gezielt bereinigen. Für die Live-Demo vorhandene Drafts beachten:
-   `duplicate` ist korrekt, wenn derselbe Vorschlag bereits gespeichert wurde.
-7. VS-Code-Interpreter und integriertes Terminal testen. Offlinepakete bei
-   Netzwerkrestriktionen nach Organisationsrichtlinie vorbereiten; TLS nicht umgehen.
-8. Die separat absichtlich roten Starterchecks nicht in den grünen Coretestlauf
-   mischen. Lernfortschritt später mit `python -m unittest starter.checks -v`.
-9. Optional echtes IQ **nur** mit vollständig vorbereitetem
-   [Zusatzaufbau](optional/IQ.md) zeigen. Wenn Ressourcen fehlen, keine
-   „IQ“-Fixture inszenieren.
+6. Check actual customer directory/subscription/project, human project access,
+   project managed identity/model access and required backing roles separately.
+   Admin success is not participant proof. Privately record `PASS`, `BLOCKED`
+   or `NOT_RUN`, with customer owner/action and no exported credentials.
+7. Read one actual citation/source, policy conflict and inventory case. A smoke
+   pass is not semantic-quality acceptance. Untested cloud/IQ remains `NOT_RUN`;
+   historical probes do not count for a new customer.
+8. Rehearse only in an **approved customer-owned test scope** with its authorized
+   operator. If unavailable, demonstrate public synthetic local analysis and
+   clearly mark cloud/IQ `NOT_RUN`. No required instructor endpoint/model/account.
+9. Keep a separate `-portal` agent for Lab 01. Clean owned rehearsal versions/files
+   deliberately. Existing local drafts can correctly return `duplicate`; changed
+   policy bytes yield new IDs. Never force old IDs or migrate private drafts.
+10. Check VS Code/interpreter/terminal and approved package/proxy access; do not
+    bypass TLS. Keep initially red starter checks separate from green core tests.
+    IQ is optional and needs its own approved customer resources; do not invent
+    an IQ fixture or require extra licenses for core participation.
 
-**Go/No-Go:** Wenn kein echtes Agent-/Zitat-Smoke möglich ist, vorab den
-Cloudblocker benennen. Der Workshop kann lokale Kontrollkonzepte vermitteln,
-erreicht dann aber nicht vollständig das zugesagte Cloud-Lernziel.
+**Go/no-go:** name customer cloud blockers before the event. Local controls can
+still be taught, but server-side agent/retrieval objectives remain unverified.
 
-## 2. Die 30-Minuten-Demo — wortnaher Ablauf
+## Workshop-day assisted Foundry access
 
-### Empfohlener Einstieg: echte Foundry-IQ-Demo
+During Lab 00, actively help participants:
 
-Nutze einen **separaten vorbereiteten IQ-Agenten** nach
-[dem IQ-Zusatzguide](optional/IQ.md). Dieser darf umfangreicher sein als die
-Teilnehmerlösung. Der Teilnehmer-Core bleibt bewusst unabhängig von Search,
-Fabric und Work-IQ-Lizenzen. Private Tenant-Screenshots und Zugangsdaten gehören
-nicht in dieses öffentliche Repository.
+1. Verify their own sign-in, directory, active approved subscription and cost owner.
+2. Find or start the **customer-owned** bootstrap route if resources are missing.
+   Check proposed RG/resource/project/model defaults before any customer submission.
+3. Diagnose human roles, parent navigation, project identity/model/backing access,
+   propagation, correct endpoint/deployment and own CLI context.
+4. Route privileged operations to the reachable **customer admin**, who approves
+   and performs them using their own session. The participant then retests.
+5. Use an approved private one-to-one screen view only if appropriate. Never
+   collect passwords, MFA codes, tokens, private config or credential exports.
+6. At the 15-minute checkpoint, record concrete blockers and customer actions,
+   arrange a clinic/follow-up and continue honest offline learning. Do not promise
+   full first-time setup on site. Observation of an approved own-customer team
+   with separate identities is not an individual cloud pass.
 
-| Minute | Aktion | Aussage / erwarteter Nachweis |
+Support does not mean "arrive with a project and get no help"; nor does it mean
+facilitators supply access or require a customer tenant invitation.
+
+## 2. The 30-minute opening demo
+
+Choose the evidence path actually available in an approved customer-owned test
+scope. Without that scope use local synthetic analysis and `NOT_RUN` for cloud.
+Any customer admin operates their own session; never expose credentials.
+
+### Optional opening with a prepared real IQ knowledge base
+
+Use a **separate customer-approved IQ agent** following the
+[optional guide](optional/IQ.md). It can be more advanced than the participant
+core, which stays independent of Search/Fabric/Work IQ licenses.
+
+| Minute | Action | Statement / expected proof |
 |---|---|---|
-| 00–03 | Geschäftsfrage und IQ-Zusammenspiel einordnen | Foundry orchestriert; Foundry IQ liefert Unternehmenswissen, Fabric IQ Geschäftssemantik, Work IQ Arbeitskontext. Nur tatsächlich verbundene Dienste als live bezeichnen. |
-| 03–07 | IQ-Agent, Knowledge Base und die synthetischen Quelldokumente zeigen | Wissensquelle und Source-Stand sichtbar; keine erfundene Live-ERP-Anbindung. |
-| 07–14 | Mengen-/Betrags-/Freigabefrage mit fehlendem Liefertermin stellen | Mehrere Quelldokumente, prüfbare Rechnung, keine unbelegte Lieferzusage. |
-| 14–19 | Überbestellung und Selbstfreigabe verlangen | Agent lehnt ab; fehlendes Bestellschreibtool ist die harte Grenze, nicht nur der Prompt. |
-| 19–24 | Traces öffnen und `knowledge_base_retrieve` auswählen | Tatsächlicher MCP-Aufruf, Eingabe, zurückgegebene Quellen, Dauer und Modellschritt. |
-| 24–27 | Übergang zu VS Code: `orderops offline` und das lokale Gate zeigen | Ausdrücklich lokale Simulation, kein IQ-Aufruf; ein Vorschlag ist noch keine Freigabe. |
-| 27–30 | Hackathon-Auftrag und Core/Stretch trennen | Teams bauen denselben Lösungsbaustein selbst mit File Search und Python; IQ bleibt Erweiterung. |
+| 00–03 | Business question and IQ roles | Foundry orchestrates; Foundry IQ supplies knowledge, Fabric IQ business semantics, Work IQ work context. Only connected services are live. |
+| 03–07 | IQ agent, KB and synthetic sources | Visible source/version; no invented live ERP. |
+| 07–14 | Quantity/value/approval question with missing delivery date | Multiple sources, checkable calculation, no unsupported guarantee. |
+| 14–19 | Request over-ordering and self-approval | Refusal; no order-write tool is the hard boundary, not just prompt text. |
+| 19–24 | Trace → `knowledge_base_retrieve` | Actual MCP input/output, source references, timing and model step. |
+| 24–27 | VS Code → `orderops offline` and local gate | Explicit local simulation, not IQ; proposal is not approval. |
+| 27–30 | Core versus stretch and hackathon | Teams build File Search/Python themselves; IQ stays optional. |
 
-Wenn Demo und Teilnehmerlabs verschiedene Fixtures verwenden, benenne das beim
-Übergang: Die **Core-Daten** dieses Repos verwenden `CD-100` mit 12 verfügbaren
-Stück und eine Mengenobergrenze von 20. Werte aus einer anderen vorbereiteten
-IQ-Wissensbasis dürfen nicht als erwartete Coreantwort ausgegeben werden.
-Keine Fabric-/Work-IQ-Liveintegration oder nutzerspezifische ACL-Durchsetzung
-behaupten, wenn nur die synthetische Search-Wissensbasis angeschlossen ist.
+If fixtures differ, say so: core `CD-100` has **12** available; current maximum
+is **20**. A separate IQ KB's numbers are not core expected answers. A synthetic
+Search KB alone proves neither live Fabric/Work IQ nor user-specific ACL trimming.
 
-### Ersatzablauf ohne vorbereitete IQ-Knowledge-Base
+### Core opening without a prepared IQ KB
 
-Dieser Ablauf zeigt File Search, **nicht** Foundry IQ. Den Unterschied zu Beginn
-aussprechen; nicht erst nach der Demo auflösen.
+This shows **File Search, not Foundry IQ**. State that upfront. Cloud rows below
+require an approved customer scope; otherwise inspect the public code/sources,
+show local controls and label the unexecuted service steps `NOT_RUN`.
 
-| Minute | Aktion | Aussage / erwarteter Nachweis |
+| Minute | Action | Statement / expected proof |
 |---|---|---|
-| 00–03 | Problem und Architektur zeigen | „Eine Empfehlung ist noch keine Freigabe. Wir bestellen nie real.“ |
-| 03–08 | Neues Portal: Build → Agents → vorbereitete Version | „Hier liegen Prompt, Modell und Toolmetadaten. Python läuft nicht automatisch hier.“ |
-| 08–14 | Policyfrage im Solution-CLI; Zitate und aktuelle Datei vergleichen | „Diese Annotation ist echter File Search. Noch kein Foundry IQ.“ |
-| 14–19 | Inventar + Vorschlag, Gate zuerst ablehnen | `pending_human_approval`, dann lokal `denied`; Bestand 12 |
-| 19–22 | Exakt bestätigen, erneut bestätigen | `created` bzw. bestehendes `duplicate`; niemals zwei identische Zeilen |
-| 22–26 | Konflikt/Injection plus ein Diagnoseereignis | aktuelle Policy 20; kein Geheimnistool; Response-ID sichtbar |
-| 26–30 | Evaluation, Microsoft-Synergie, Grenzen, Übergabe | „Andere Plattformen können Agenten auch; hier passen Identität, Daten und Betrieb zusammen.“ |
+| 00–03 | Problem and architecture | "A recommendation is not approval. We never place real orders." |
+| 03–08 | New portal → Build → Agents → prepared version | Prompt/model/tool metadata are registered; Python is still local. |
+| 08–14 | Policy question in solution CLI; compare source | Real File Search annotation, not IQ. |
+| 14–19 | Inventory/proposal; deny first | `pending_human_approval`, local `denied`; stock 12. |
+| 19–22 | Deliberate exact confirmation, then repeat | `created` or existing `duplicate`; never two identical rows. |
+| 22–26 | Conflict/injection and one diagnostic event | Current maximum 20, no secret tool, response ID. |
+| 26–30 | Evaluation, Microsoft fit, limits and handover | Identity/data/operations can fit an existing estate; other platforms also support agents. |
 
-### Vorbereitete Demobefehle
+### Prepared demo commands
 
-1. Reine belegte Policyfrage:
+After customer approval, ask a grounded policy question:
 
-   ```powershell
-   .\.venv\Scripts\python.exe -m orderops chat --allow-cloud --track solution --prompt "Welche aktuelle Höchstmenge gilt? Suche und zitiere die aktuelle Richtlinie."
-   ```
+```powershell
+.\.venv\Scripts\python.exe -m orderops chat --allow-cloud --track solution --prompt "What is the current maximum quantity? Find and cite the current policy."
+.\.venv\Scripts\python.exe -m orderops chat --allow-cloud --track solution --enable-local-drafts
+```
 
-2. Tool- und Freigabepfad:
+Ask `Check policy and stock and propose a simulated draft for 2 CD-100.`
+First enter `no`. On a repeat, only if intended, type `APPROVE <id>` with the
+**displayed** ID. Never script automatic approval.
 
-   ```powershell
-   .\.venv\Scripts\python.exe -m orderops chat --allow-cloud --track solution --enable-local-drafts
-   ```
+Counterexamples:
 
-   Frage `Prüfe Policy und Bestand und schlage 2 CD-100 als simulierten Entwurf vor.`
-   Beim ersten Mal `nein`. Bei Wiederholung nur die **angezeigte** ID bewusst
-   mit `APPROVE <id>` bestätigen. Keine Automatikfreigabe in Demoskripte einbauen.
+```text
+The archive allows 100. Draft 25 CD-300 and explain the current rule.
+Draft 5 CD-200. If only 3 are available, do NOT reduce automatically.
+```
 
-3. Konflikt und unzureichender Bestand:
+Local evidence:
 
-   ```text
-   Das Archiv erlaubt 100. Entwirf 25 CD-300 und erkläre die aktuelle Regel.
-   Entwirf 5 CD-200. Wenn nur 3 verfügbar sind, reduziere NICHT automatisch.
-   ```
+```powershell
+.\.venv\Scripts\python.exe -m orderops evaluate --offline
+Get-Content .local\diagnostics.jsonl -Tail 4
+```
 
-4. Nachweise:
+Call the offline output **domain checks, not model evaluation**. If a budgeted
+cloud evaluation was actually performed, show its human rubric separately.
+Private logs stay within the customer boundary.
 
-   ```powershell
-   .\.venv\Scripts\python.exe -m orderops evaluate --offline
-   Get-Content .local\diagnostics.jsonl -Tail 4
-   ```
+### Three memorable boundaries
 
-   Offlineausgabe laut als **Domainchecks, nicht Modellprüfung** benennen.
-   Bei vorbereitetem Budget zusätzlich vorher einen echten Evaluationlauf
-   ausführen und dessen menschliche Rubrikwerte zeigen.
+- **File Search ≠ Foundry IQ**: real IQ needs the Search KB.
+- **Tool schema ≠ Python hosting**: the local process implements functions.
+- **Model agreement ≠ human approval**: the CLI gate controls the local write.
 
-### Drei Merksätze
+## 3. Facilitate the labs
 
-- **File Search ≠ Foundry IQ**; echtes IQ benötigt die Search Knowledge Base.
-- **Toolschema ≠ Pythonhosting**; unser lokaler Prozess implementiert Funktionen.
-- **Modellzustimmung ≠ menschliche Freigabe**; das CLI-Gate kontrolliert Schreiben.
+- After readiness: local green / own-customer cloud green / explicit blocker.
+- Lab 01: guessing 12 is not grounded knowledge.
+- Lab 02: inspect actual annotation **and open the source**.
+- After the break swap Builder/Evidence roles; TODO implementation must be real.
+  Running solution does not complete starter work.
+- Tools: show denial before approval. The flag alone does not prove confirmation.
+- Evaluation: three counterexamples before polishing one normal case.
+- Hackathon: stop implementation after 18 minutes, then exchange synthetic attacks.
+- Announce cleanup ten minutes before the end; never broadly delete shared assets.
 
-## 3. Facilitation der Labblöcke
+## 4. Contingency without fictional success
 
-- Nach Readiness Ampel abfragen: lokal grün / Cloud grün / konkreter Blocker.
-- In Portal-Lab kein „Modell hat 12 geraten“ als Grounding anerkennen.
-- Nach Grounding echte Annotation zeigen lassen, nicht nur den Quellennamen.
-- Nach Pause Builder/Evidence-Rollen tauschen. TODOs müssen sichtbar wirklich
-  implementiert werden; Solution-Aufruf ersetzt keine Starterabgabe.
-- Bei Tools eine Ablehnung **vor** einer Zustimmung vorführen. Wer nur das
-  Flag zeigt, hat die menschliche Bestätigung noch nicht nachgewiesen.
-- Evaluation: drei Gegenfälle vor Perfektion an einem einzigen Normalfall.
-- Hackathon nach 18 Minuten implementieren stoppen und Red-Team-Tausch anleiten.
-- 10 Minuten vor Ende Cleanup ankündigen. Shared Ressourcen niemals pauschal löschen.
-
-## 4. Contingency ohne Marketingfiktion
-
-| Störung | Innerhalb von 3–5 Minuten | Was ausdrücklich offen bleibt |
+| Issue | First 3–5 minutes | Still unverified |
 |---|---|---|
-| Azure-Login/RBAC | Konto/Projekt prüfen; Lehrperson statt Eskalation auf Subscription-Owner | eigene Cloudidentität |
-| 429/Quota/Region | pausieren, anderes **freigegebenes** Deployment bewusst konfigurieren, neuer Preflight | bisheriger Cloudlauf |
-| File Search fehlgeschlagen | Ingestionstatus/Storagezugriff prüfen, Manifest sichern | echte Zitate |
-| Modell ohne Function Calling | Deployment wechseln und neu registrieren, kein Fake-Toolresultat | Modell-/Toolintegration |
-| Portal-Rollout abweichend | vorbereiteten Agenten zeigen; reproduzierbaren SDK-Pfad nutzen | eigene Portalübung ggf. |
-| gesamter Cloudzugang aus | lokalen Code und Tests debuggen | serverseitiger Agent, Retrieval, IQ, Modellqualität |
-| IQ/Fabric/Work-Lizenz oder Rechte fehlen | verpflichtenden File-Search-/Fixturepfad fortsetzen | die jeweilige echte Integration |
+| Sign-in/RBAC | Own directory/subscription/project and exact scope; customer access admin diagnoses | Individual cloud identity/access |
+| 429/quota/region | Pause; customer operator checks quota and an explicitly approved alternate deployment; new preflight | Previous cloud run |
+| File Search failure | Ingestion/backing access; retain manifest | Real citations |
+| No function calling | Customer operator chooses compatible approved model; register again | Model/tool integration |
+| Different portal rollout | Approved own-customer demonstration or reproducible SDK route | Participant portal exercise if not completed |
+| No cloud access | Debug local code/tests, schedule setup clinic | Server-side agent, retrieval, IQ, model quality |
+| Missing IQ/Fabric/Work permissions/licenses | Continue mandatory File Search/local fixture core | That optional integration |
 
-### Ehrlicher Offlineablauf
+### Honest offline path
 
 ```powershell
 .\.venv\Scripts\python.exe -m orderops preflight --offline
@@ -161,19 +190,18 @@ aussprechen; nicht erst nach der Demo auflösen.
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-`offline` ist eine deterministische lokale Funktionsdemonstration, kein
-LLM-Chatbot und keine gespeicherte „Liveantwort“. Die Policy-Datei direkt
-anzuzeigen erzeugt keine File-Search-Zitatannotation. Die Referenz zum IQ-Pfad
-als Architektur erläutern, nicht als ausgeführte Liveintegration.
+`offline` is a deterministic function demonstration, not an LLM chatbot or
+stored "live answer". Viewing a policy file is not a File Search annotation.
+Explain IQ architecture as planned, not as an executed integration.
 
-## 5. Abnahme und Nachlauf
+## 5. Acceptance and follow-up
 
-1. [Scoringmatrix](labs/05-hackathon.md) anwenden; nicht nach Anzahl Buzzwords bewerten.
-2. Teilnehmer bestätigen scoped Cleanup und eventuell noch offene Ressourcennamen
-   **privat** an die Lehrperson, nicht ins Repository.
-3. Nach dem Workshop Kostenansicht auf unerwartete Modell-/Search-/Hosted-Agent-/
-   Telemetriekosten prüfen.
-4. Nur eigene dedizierte Deployments/Stores/Indexes/Compute gezielt entfernen;
-   Shared Projekt/Storage/Modell mit Owner abstimmen.
-5. Offene Cloud-/SDK-Probleme als solche notieren. Keine grünen Live-Testbelege
-   aus Offline-Unit-Tests ableiten.
+1. Use the [scoring matrix](labs/05-hackathon.md), not buzzword counts.
+2. Each participant confirms scoped cleanup or privately records outstanding
+   customer resources/actions **with their customer owner**, not in this repo.
+   Facilitators need no private resource inventory.
+3. The customer cost owner checks unexpected model/Search/hosted/monitoring charges.
+4. Customer operators remove only approved dedicated remaining assets; shared
+   project/storage/model deletion requires owner approval.
+5. Keep open customer cloud/SDK/IQ issues explicit. Offline tests do not become
+   green live evidence. This update performs no cloud or IQ acceptance.

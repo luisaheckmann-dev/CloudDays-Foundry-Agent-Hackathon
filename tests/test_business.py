@@ -1,3 +1,4 @@
+import hashlib
 import json
 import shutil
 import sqlite3
@@ -48,7 +49,8 @@ class BusinessTests(unittest.TestCase):
         p = propose("CD-100", 2)
         for enabled, text in ((False, f"APPROVE {p.id}"), (True, "yes"),
                               (True, "APPROVE other"), (True, ""),
-                              (True, f"APPROVE {p.id}\n")):
+                              (True, f"APPROVE {p.id}\n"), (True, f"approve {p.id}"),
+                              (True, f" APPROVE {p.id}"), (True, f"APPROVE {p.id} ")):
             result = save_approved(p, self.db, enabled=enabled, confirmation=text)
             self.assertEqual(result["status"], "denied")
             self.assertFalse(self.db.exists())
@@ -67,8 +69,59 @@ class BusinessTests(unittest.TestCase):
 
     def test_tampering_rejected(self):
         p = propose("CD-100", 2)
-        with self.assertRaises(ValueError):
-            save_approved(replace(p, quantity=3), self.db, enabled=True, confirmation=f"APPROVE {p.id}")
+        for changed in (replace(p, quantity=3), replace(p, sku="CD-300"),
+                        replace(p, policy_hash="0" * 64), replace(p, simulation=False)):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                save_approved(changed, self.db, enabled=True, confirmation=f"APPROVE {p.id}")
+        self.assertFalse(self.db.exists())
+
+    def test_policy_hash_matches_current_source(self):
+        source = ROOT / "data" / "policy" / "order-policy-2026-11.txt"
+        self.assertEqual(propose("CD-100", 2).policy_hash,
+                         hashlib.sha256(source.read_bytes()).hexdigest())
+
+    def copy_business_fixtures(self):
+        (self.work / "data" / "policy").mkdir(parents=True)
+        for parts in (("inventory.json",), ("policy", "order-policy-2026-11.txt")):
+            shutil.copyfile((ROOT / "data").joinpath(*parts),
+                            (self.work / "data").joinpath(*parts))
+
+    def test_changed_policy_invalidates_staged_proposal(self):
+        self.copy_business_fixtures()
+        with patch("orderops.business.ROOT", self.work):
+            original = propose("CD-100", 2)
+            source = self.work / "data" / "policy" / "order-policy-2026-11.txt"
+            source.write_bytes(source.read_bytes() + b"\nSynthetic test policy revision.\n")
+            current = propose("CD-100", 2)
+            self.assertNotEqual(original.policy_hash, current.policy_hash)
+            self.assertNotEqual(original.id, current.id)
+            with self.assertRaises(ValueError):
+                save_approved(original, self.db, enabled=True,
+                              confirmation=f"APPROVE {original.id}")
+        self.assertFalse(self.db.exists())
+
+    def test_stock_and_block_are_revalidated_before_write(self):
+        self.copy_business_fixtures()
+        with patch("orderops.business.ROOT", self.work):
+            original = propose("CD-100", 2)
+            path = self.work / "data" / "inventory.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for available, blocked in ((1, False), (12, True)):
+                data["items"][0].update(available=available, blocked=blocked)
+                path.write_text(json.dumps(data), encoding="utf-8")
+                with self.subTest(available=available, blocked=blocked), self.assertRaises(ValueError):
+                    save_approved(original, self.db, enabled=True,
+                                  confirmation=f"APPROVE {original.id}")
+        self.assertFalse(self.db.exists())
+
+    def test_denial_does_not_modify_existing_database(self):
+        original = propose("CD-100", 2)
+        save_approved(original, self.db, enabled=True, confirmation=f"APPROVE {original.id}")
+        before = self.db.read_bytes()
+        other = propose("CD-100", 3)
+        self.assertEqual(save_approved(other, self.db, enabled=True,
+                                       confirmation="yes")["status"], "denied")
+        self.assertEqual(self.db.read_bytes(), before)
 
     def test_eof_denies(self):
         def closed(_):

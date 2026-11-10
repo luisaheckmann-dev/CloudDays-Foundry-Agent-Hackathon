@@ -15,7 +15,7 @@ MAX_QUANTITY = 20
 
 def inventory(sku):
     if not isinstance(sku, str) or not sku or len(sku) > 40:
-        raise ValueError("SKU muss eine nichtleere Zeichenfolge sein.")
+        raise ValueError("SKU must be a nonempty string.")
     data = json.loads((ROOT / "data" / "inventory.json").read_text(encoding="utf-8"))
     item = next((x for x in data["items"] if x["sku"] == sku), None)
     if item is None:
@@ -29,30 +29,33 @@ class Proposal:
     id: str
     sku: str
     quantity: int
+    policy_hash: str
     policy_id: str = POLICY_ID
     simulation: bool = True
 
 
 def propose(sku, quantity):
     if type(quantity) is not int or not 1 <= quantity <= MAX_QUANTITY:
-        raise ValueError(f"Menge muss eine ganze Zahl von 1 bis {MAX_QUANTITY} sein (kein bool/float).")
+        raise ValueError(f"Quantity must be an integer from 1 to {MAX_QUANTITY} (not bool/float).")
     item = inventory(sku)
     if not item["found"]:
-        raise ValueError("Unbekannte SKU: kein Entwurf.")
+        raise ValueError("Unknown SKU: no draft.")
     if item["blocked"]:
-        raise ValueError("Produkt gesperrt: kein Entwurf.")
+        raise ValueError("Product blocked: no draft.")
     if quantity > item["available"]:
-        raise ValueError(f"Bestand unzureichend: nur {item['available']} verfügbar.")
-    canonical = json.dumps([POLICY_ID, sku, quantity], separators=(",", ":"))
+        raise ValueError(f"Insufficient stock: only {item['available']} available.")
+    policy_hash = hashlib.sha256(
+        (ROOT / "data" / "policy" / "order-policy-2026-11.txt").read_bytes()).hexdigest()
+    canonical = json.dumps([POLICY_ID, policy_hash, sku, quantity], separators=(",", ":"))
     proposal_id = hashlib.sha256(canonical.encode()).hexdigest()[:16]
-    return Proposal(proposal_id, sku, quantity)
+    return Proposal(proposal_id, sku, quantity, policy_hash)
 
 
 def save_approved(proposal, db_path, *, enabled=False, confirmation=""):
     """CLI trust boundary, never exposed as a model-callable function."""
     validated = propose(proposal.sku, proposal.quantity)
     if proposal != validated:
-        raise ValueError("Manipulierter Entwurf.")
+        raise ValueError("Proposal changed or no longer valid.")
     if not enabled or confirmation != f"APPROVE {proposal.id}":
         return {"status": "denied", "simulation": True, "id": proposal.id}
     path = Path(db_path)
@@ -71,17 +74,17 @@ def save_approved(proposal, db_path, *, enabled=False, confirmation=""):
 
 
 def approval_gate(proposal, db_path, *, enabled=False, read=None):
-    print("LOKALE SIMULATION; KEINE BESTELLUNG:", json.dumps(asdict(proposal)))
+    print("LOCAL SIMULATION; NOT AN ORDER:", json.dumps(asdict(proposal)))
     if not enabled:
-        print("Schreibgate deaktiviert. Kein Entwurf gespeichert.")
+        print("Write gate disabled. No draft saved.")
         return save_approved(proposal, db_path)
     if read is None:
         if not sys.stdin.isatty():
-            print("Keine interaktive Terminaleingabe; Freigabe über Pipe/Automation verweigert.")
+            print("No interactive terminal input; approval through pipes/automation denied.")
             return save_approved(proposal, db_path)
         read = input
     try:
-        confirmation = read(f"Nur lokal freigeben: APPROVE {proposal.id} (sonst Ablehnung): ")
+        confirmation = read(f"Approve locally only: APPROVE {proposal.id} (anything else denies): ")
     except (EOFError, KeyboardInterrupt):
         confirmation = ""
     return save_approved(proposal, db_path, enabled=True, confirmation=confirmation)

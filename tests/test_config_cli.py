@@ -58,6 +58,23 @@ class ConfigTests(unittest.TestCase):
                          "injection", "denied-approval", "duplicate", "desired-citation"} <= cases)
         self.assertEqual(len(cases), len(dataset()))
 
+    def test_cli_credential_uses_only_explicit_customer_selector(self):
+        from orderops.cloud import clients
+        endpoint = "https://unit.services.ai.azure.com/api/projects/unit"
+        for selectors, expected in (
+                ({}, {}),
+                ({"tenant": "customer-tenant"}, {"tenant_id": "customer-tenant"}),
+                ({"subscription": "11111111-2222-3333-4444-555555555555"},
+                 {"subscription": "11111111-2222-3333-4444-555555555555"})):
+            with self.subTest(selectors=selectors):
+                with patch("azure.identity.AzureCliCredential") as credential:
+                    with patch("azure.ai.projects.AIProjectClient") as project:
+                        with clients(Settings(endpoint, "model", "agent", **selectors)):
+                            pass
+                credential.assert_called_once_with(process_timeout=20, **expected)
+                self.assertEqual(project.call_args.kwargs["endpoint"], endpoint)
+                self.assertEqual(project.call_args.kwargs["retry_total"], 0)
+
     def test_fake_citations_and_plain_filename_do_not_pass(self):
         case = next(case for case in dataset() if case["id"] == "desired-citation")
         result = RunResult("20: order-policy-2026-11.txt", citations=[])

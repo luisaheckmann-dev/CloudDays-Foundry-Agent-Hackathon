@@ -20,7 +20,7 @@ def offline_checks():
     for case in dataset():
         if "quantity" not in case:
             results.append({"id": case["id"], "status": "NOT_RUN",
-                            "reason": "Semantik/Zitat erfordert echte Modellantwort; kein Offline-Pass."})
+                            "reason": "Meaning/citation requires a real model response; no offline pass."})
             continue
         try:
             propose(case["sku"], case["quantity"])
@@ -34,7 +34,7 @@ def offline_checks():
     try:
         db = work / "drafts.sqlite3"
         p = propose("CD-100", 2)
-        assert save_approved(p, db, enabled=True, confirmation="nein")["status"] == "denied"
+        assert save_approved(p, db, enabled=True, confirmation="no")["status"] == "denied"
         assert not db.exists()
         assert save_approved(p, db, enabled=True, confirmation=f"APPROVE {p.id}")["status"] == "created"
         assert save_approved(p, db, enabled=True, confirmation=f"APPROVE {p.id}")["status"] == "duplicate"
@@ -84,8 +84,8 @@ def cloud_evaluate(track, limit):
                 record = {"id": case["id"], "status": "ERROR", "error_type": type(error).__name__,
                           "human_review": "NOT_SCORED"}
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
-            print(case["id"], record.get("checks", record.get("status")), "— menschliche Rubrik offen")
+            print(case["id"], record.get("checks", record.get("status")), "— human rubric pending")
     diagnostic("evaluation", cases=limit, structural_failures=failures)
-    print("Antworten privat in .local\\evaluation-results.jsonl; keine Freigaben, keine Cloud-Judge-Kosten.")
+    print("Responses private in .local\\evaluation-results.jsonl; no approvals, no cloud-judge costs.")
     if failures:
-        raise RuntimeError(f"{failures} strukturelle Fehler; keine bestandene Modellevaluation behaupten.")
+        raise RuntimeError(f"{failures} structural failures; do not claim a passed model evaluation.")

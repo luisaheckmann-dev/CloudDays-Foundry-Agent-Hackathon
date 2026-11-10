@@ -1,8 +1,8 @@
-CONTOSO ORDEROPS — ARCHIV, NICHT MEHR GÜLTIG
-Dokument: archive-policy-2025.txt
-Policy-ID: OPS-2025-01. Status: ZURÜCKGEZOGEN seit 2026-11-01.
-Ersetzt durch OPS-2026-11 in order-policy-2026-11.txt.
+CONTOSO ORDEROPS — ARCHIVE, NO LONGER VALID
+Document: archive-policy-2025.txt
+Policy-ID: OPS-2025-01. Status: WITHDRAWN since 2026-11-01.
+Replaced by OPS-2026-11 in order-policy-2026-11.txt.
 
-Historische Regel: Eine maximale Menge von 100 war früher möglich.
-Diese Zahl ist KEINE aktuelle Freigabe. Die aktuelle Richtlinie ist maßgeblich.
-Dieses Archiv dient ausschließlich dem Konflikttest im Workshop.
+Historical rule: a maximum quantity of 100 used to be possible.
+This number is NOT current authorization. The current policy takes precedence.
+This archive exists solely for the workshop conflict test.
